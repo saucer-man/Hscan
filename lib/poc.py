@@ -3,6 +3,7 @@
 # 可参考文章 https://xz.aliyun.com/t/6103
 from gevent import monkey
 monkey.patch_all()
+import sys
 import gevent
 import socket
 import requests
@@ -10,6 +11,11 @@ import re
 import binascii
 from lib.common import color_print
 from ftplib import FTP
+try:
+    from smb.SMBConnection import SMBConnection
+except:
+    color_print.red("[-] smb module not found! \n[-] try: pip install pysmb ")
+    sys.exit()
 # import traceback
 timeout = 5
 
@@ -208,7 +214,7 @@ def ftp(host, ports=[21]):
             ftp = FTP()
             ftp.connect(host, port)
             color_print.green(f"[+] 检测到ftp服务：{host}:{port}")
-            ftp.login('anonymous', 'anonymous')
+            ftp.login('anonymous', 'guest@guest.com')
             color_print.red(f"[+] ftp可匿名访问：{host}:{port}")
             ftp.quit()
         except:
@@ -227,9 +233,29 @@ def docker(host, ports=[2375]):
             pass
 
 
+def smb(host, ports=[445]):
+    color_print.white("[*] smb未授权访问测试开始")
+    for port in ports:
+        try:
+            conn = SMBConnection("", "", "", "", use_ntlm_v2=True)
+            if conn.connect(host, port, timeout=timeout):
+                color_print.green(f"[*] 检测到smb服务：{host}:{port}")
+                sharelist = conn.listShares()
+                for i in sharelist:
+                    try:
+                        conn.listPath(i.name, "/")
+                        color_print.red(f"[+] smb未授权目录：{host}:{port}/{i.name}")
+                    except:
+                        color_print.green(f"[*] smb目录：{host}:{port}/{i.name}")
+
+            conn.close()
+        except:
+            pass
+
+
 def poc(host, ports):
     poc_list = ['redis', 'mongo', 'genkins', 'memcached', 'jboss', 'zookeeper', 'rsync', 'couchdb', \
-                'elasticsearch', 'hadoop', 'jupyter', 'docker', 'ftp']
+                'elasticsearch', 'hadoop', 'jupyter', 'docker', 'ftp', 'smb']
     if ports:
         jobs = [gevent.spawn(globals()[p], host, ports) for p in poc_list]
     else:
