@@ -1,123 +1,122 @@
 # !/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 可参考文章 https://xz.aliyun.com/t/6103
-from gevent import monkey
-monkey.patch_all()
+# reference https://xz.aliyun.com/t/6103
+
 import sys
-import gevent
 import socket
 import requests
 import re
 import binascii
+import traceback
+import urllib3
 from lib.common import color_print
 from ftplib import FTP
 try:
     from smb.SMBConnection import SMBConnection
+    import pymysql
+    import cx_Oracle
+    import psycopg2
 except:
-    color_print.red("[-] smb module not found! \n[-] try: pip install pysmb ")
+    color_print.red("[-]  module not found! \n[-] try: pip install -r requirement.txt ")
     sys.exit()
-# import traceback
-timeout = 5
 
 
-def redis(host, ports=[6379]):
-    color_print.white("[*] redis未授权访问测试开始")
+urllib3.disable_warnings()
+timeout = 3
+
+
+def redis(host, port=6379):
     socket.setdefaulttimeout(timeout)
     payload = '\x2a\x31\x0d\x0a\x24\x34\x0d\x0a\x69\x6e\x66\x6f\x0d\x0a'
-    for port in ports:
-        try:
-            s = socket.socket()
-            s.connect((host, port))
-            s.send(payload.encode('utf-8'))
-            recv_data = s.recv(1024)
-            s.close()
-            if recv_data and b'redis_version' in recv_data:
-                color_print.red(f'[+] redis未授权访问：{host}:{port}')
-        except:
-            # traceback.print_exc()
-            pass
+    try:
+        s = socket.socket()
+        s.connect((host, port))
+        s.send(payload.encode('utf-8'))
+        recv_data = s.recv(1024)
+        s.close()
+        if recv_data and b'redis_version' in recv_data:
+            color_print.red(f'[+] redis is not authorized to access：{host}:{port}')
+        elif b'NOAUTH Authentication required' in recv_data:
+            color_print.green(f'[+] redis service detected (authorization required)：{host}:{port}')
+        elif b"protected mode is enabled" in recv_data:
+            color_print.green(f'[+] redis service detected (running in protected mode)：{host}:{port}')
+    except:
+        # traceback.print_exc()
+        pass
 
 
-def mongo(host, ports=[27017]):
-    color_print.white("[*] mongodb未授权访问测试开始")
+def mongo(host, port=27017):
     socket.setdefaulttimeout(timeout)
     payload = binascii.a2b_hex(
         "430000000300000000000000d40700000000000061646d696e2e24636d640000000000ffffffff1c000000016c69737444617461626173657300000000000000f03f00")
-    for port in ports:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((host, port))
-            s.send(payload)
-            recv_data = s.recv(500)
-            if "databases".encode('utf-8') in recv_data:
-                color_print.red(f"[+] mongodb未授权访问：{host}:{port}")
-        except:
-            # traceback.print_exc()
-            pass
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, port))
+        s.send(payload)
+        recv_data = s.recv(1024)
+        if b"databases"in recv_data:
+            color_print.red(f"[+] mongodb is not authorized to access：{host}:{port}")
+        if b"Unauthorized" in recv_data:
+            color_print.green(f"[+] mongodb service detected (authorization required)：{host}:{port}")
+    except:
+        # traceback.print_exc()
+        pass
 
 
-def genkins(host, ports=[8080]):
-    color_print.white("[*] genkins未授权访问测试开始")
-    for port in ports:
-        try:
-            payload = f"http://{host}:{port}/manage"
-            r = requests.get(payload, timeout=timeout, allow_redirects=False, verify=False)
-            if "genkins" in r.text:
-                color_print.red(f"[+] genkins未授权访问：{payload}")
-        except:
-            # traceback.print_exc()
-            pass
+def genkins(host, port=8080):
+    try:
+        payload = f"http://{host}:{port}/manage"
+        r = requests.get(payload, timeout=timeout, allow_redirects=False, verify=False)
+        if "genkins" in r.text:
+            color_print.red(f"[+] genkins is not authorized to access：{payload}")
+    except:
+        # traceback.print_exc()
+        pass
 
 
-def memcached(host, ports=[11211]):
-    color_print.white("[*] memcached未授权访问测试开始")
+def memcached(host, port=11211):
     socket.setdefaulttimeout(timeout)
-    for port in ports:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((host, port))
-            s.send("stats\r\n".encode())
-            recv_data = s.recv(1024)
-            s.close()
-            if recv_data and b"STAT version" in recv_data:
-                color_print.red(f"[+] memcached未授权访问：{host}:{port}")
-        except:
-            # traceback.print_exc()
-            pass
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, port))
+        s.send("stats\r\n".encode())
+        recv_data = s.recv(1024)
+        s.close()
+        if recv_data and b"STAT pid" in recv_data:
+            color_print.red(f"[+] memcached is not authorized to access：{host}:{port}")
+    except:
+        # traceback.print_exc()
+        pass
 
 
-def jboss(host, ports=[8080]):
-    color_print.white("[*] jboss未授权访问测试开始")
-    for port in ports:
-        try:
-            payload = f"http://{host}:{port}/jmx-console/"
-            r = requests.get(payload, timeout=timeout, allow_redirects=False, verify=False)
-            if "jboss" in r.text:
-                color_print.red(f"jboss: {payload}")
-        except:
-            # traceback.print_exc()
-            pass
+def jboss(host, port=8080):
+    try:
+        payload = f"http://{host}:{port}/jmx-console/"
+        r = requests.get(payload, timeout=timeout, allow_redirects=False, verify=False)
+        if "jboss" in r.text:
+            color_print.red(f"jboss is not authorized to access: {payload}")
+    except:
+        # traceback.print_exc()
+        pass
 
 
-def zookeeper(host, ports=[2181]):
-    color_print.white("[*] zookeeper未授权访问测试开始")
+def zookeeper(host, port=2181):
     socket.setdefaulttimeout(timeout)
-    for port in ports:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((host, port))
-            s.send("envi".encode())
-            recv_data = s.recv(1024)
-            s.close()
-            if b'Environment' in recv_data:
-                color_print.red(f"[+] zookeeper未授权访问：{host}:{port}")
-        except:
-            pass
+
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, port))
+        s.send("envi".encode())
+        recv_data = s.recv(1024)
+        s.close()
+        if b'zookeeper.version' in recv_data:
+            color_print.red(f"[+] zookeeper is not authorized to access：{host}:{port}")
+    except:
+        pass
 
 
-def rsync(host, ports=[873]):
-    color_print.white("[*] rsync未授权访问测试开始")
-    # 代码参考https://raw.githubusercontent.com/ysrc/xunfeng/master/vulscan/vuldb/rsync_weak_auth.py
+def rsync(host, port=873):
+    # refer: https://raw.githubusercontent.com/ysrc/xunfeng/master/vulscan/vuldb/rsync_weak_auth.py
     def _rsync_init(host, port):
         s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         socket.setdefaulttimeout(timeout)
@@ -126,139 +125,188 @@ def rsync(host, ports=[873]):
         _ = s.recv(1024)
         return s
 
-    for port in ports:
-        try:
-            # 获取目录
+    try:
+        # get directory
+        s = _rsync_init(host, port)
+        s.send(bytes.fromhex('0a'))
+        recv_data = s.recv(1024)
+        s.close()
+        paths = []
+        if recv_data:
+            for path_name in re.split('\n', recv_data.decode()):
+                if path_name and not path_name.startswith('@RSYNCD: '):
+                    paths.append(path_name.split('\t')[0].strip())
+        if paths:
+            color_print.green(f"[+] detected rsync service：{host}:{port}")
+        # print(f"get directory bytes-----{recv_data}")
+        # print(f"The obtained directory is-----------{paths}")
+
+        # Try to see if can gain unauthorized access
+        for path in paths:
             s = _rsync_init(host, port)
-            s.send(bytes.fromhex('0a'))
+            s.send(f"{path}\n".encode())
             recv_data = s.recv(1024)
-            s.close()
-            paths = []
-            if recv_data:
-                for path_name in re.split('\n', recv_data.decode()):
-                    if path_name and not path_name.startswith('@RSYNCD: '):
-                        paths.append(path_name.split('\t')[0].strip())
-            if paths:
-                color_print.green(f"[+] 检测到rsync服务：{host}:{port}")
-            # print(f"获取目录字节-----{recv_data}")
-            # print(f"获取到的目录为-----------{paths}")
+            # print(f" Trying to grant unauthorized access to the accepted bytes-----------{recv_data}")
 
-            # 尝试看下是否可以未授权访问
-            for path in paths:
-                s = _rsync_init(host, port)
-                s.send(f"{path}\n".encode())
+            if recv_data.decode() == '\n':
                 recv_data = s.recv(1024)
-                # print(f"尝试未授权访问接受的字节-----------{recv_data}")
+            # The following instructions prove unauthorized access
+            if recv_data.decode().startswith('@RSYNCD: OK'):
+                color_print.red(f"[+] rsync is not authorized to access：{host}:{port}/{path}")
+            s.close()
 
-                if recv_data.decode() == '\n':
-                    recv_data = s.recv(1024)
-                # 以下说明是未授权访问
-                if recv_data.decode().startswith('@RSYNCD: OK'):
-                    color_print.red(f"[+] rsync未授权访问：{host}:{port}/{path}")
-                s.close()
-
-        except:
-            # traceback.print_exc()
-            pass
+    except:
+        # traceback.print_exc()
+        pass
 
 
-def couchdb(host, ports=[5984]):
-    color_print.white("[*] couchdb未授权访问测试开始")
-    for port in ports:
-        try:
-            url = f"http://{host}:{port}"
-            r = requests.get(url, timeout=timeout, allow_redirects=True, verify=False)
-            if "couchdb" in r.text:
-                color_print.red(f"[+] couchdb未授权访问：{host}:{port}")
-        except:
-            pass
+def couchdb(host, port=5984):
+    try:
+        url = f"http://{host}:{port}"
+        r = requests.get(url, timeout=timeout, allow_redirects=True, verify=False)
+        if "couchdb" in r.text:
+            color_print.red(f"[+] couchdb is not authorized to access：{host}:{port}")
+    except:
+        pass
 
 
-def elasticsearch(host, ports=[9200]):
-    color_print.white("[*] elasticsearch未授权访问测试开始")
-    for port in ports:
-        try:
-            r = requests.get(f"http://{host}:{port}", timeout=timeout, allow_redirects=False, verify=False)
-            if "You Know, for Search" in r.text:
-                color_print.red(f"[+] elasticsearch未授权访问：{host}:{port}")
-        except:
-            pass  # traceback.print_exc()
+def elasticsearch(host, port=9200):
+    try:
+        r = requests.get(f"http://{host}:{port}", timeout=timeout, allow_redirects=False, verify=False)
+        if "You Know, for Search" in r.text:
+            color_print.red(f"[+] elasticsearch is not authorized to access：{host}:{port}")
+    except:
+        pass  # traceback.print_exc()
 
 
-def hadoop(host, ports=[8088]):
-    color_print.white("[*] hadoop未授权访问测试开始")
-    for port in ports:
-        try:
-            r = requests.get(f"http://{host}:{port}/cluster", timeout=timeout, allow_redirects=True, verify=False)
-            if "Hadoop" in r.text:
-                color_print.red(f"[+] hadoop未授权访问：{host}:{port}")
-        except:
-            pass
+def hadoop(host, port=8088):
+    try:
+        r = requests.get(f"http://{host}:{port}/cluster", timeout=timeout, allow_redirects=True, verify=False)
+        if "Hadoop" in r.text:
+            color_print.red(f"[+] hadoop is not authorized to access：{host}:{port}")
+    except:
+        pass
 
+def jupyter(host, port=8888):
+    try:
+        r = requests.get(f"http://{host}:{port}", timeout=timeout, verify=False)
+        if "clusters" in r.text:
+            color_print.red(f"[+] jupyter is not authorized to access：{host}:{port}")
+    except:
+        pass
 
-def jupyter(host, ports=[8888]):
-    color_print.white("[*] jupyter未授权访问测试开始")
-    for port in ports:
-        try:
-            r = requests.get(f"http://{host}:{port}", timeout=timeout, verify=False)
-            if "clusters" in r.text:
-                color_print.red(f"[+] jupyter未授权访问：{host}:{port}")
-        except:
-            pass
+def ftp(host, port=21):
+    try:
+        ftp = FTP(timeout=timeout)
+        ftp.connect(host, port)
+        color_print.green(f"[+] ftp service detected：{host}:{port}")
+        ftp.login('anonymous', 'guest@guest.com')
+        color_print.red(f"[+] ftp is not authorized to access：{host}:{port}")
+        ftp.quit()
+    except:
+        pass
 
-
-def ftp(host, ports=[21]):
-    color_print.white("[*] ftp未授权访问测试开始")
-    for port in ports:
-        try:
-            ftp = FTP()
-            ftp.connect(host, port)
-            color_print.green(f"[+] 检测到ftp服务：{host}:{port}")
-            ftp.login('anonymous', 'guest@guest.com')
-            color_print.red(f"[+] ftp可匿名访问：{host}:{port}")
-            ftp.quit()
-        except:
-            pass
-
-
-def docker(host, ports=[2375]):
+def docker(host, port=2375):
     # exp: https://github.com/Tycx2ry/docker_api_vul
-    color_print.white("[*] docker未授权访问测试开始")
-    for port in ports:
-        try:
-            r = requests.get(f"http://{host}:{port}/version", timeout=timeout, verify=False)
-            if "ApiVersion" in r.text:
-                color_print.red(f"[+] docker未授权访问：{host}:{port}")
-        except:
-            pass
+    try:
+        r = requests.get(f"http://{host}:{port}/version", timeout=timeout, verify=False)
+        if "ApiVersion" in r.text:
+            color_print.red(f"[+] docker remote api is not authorized to access：{host}:{port}")
+    except:
+        pass
 
 
-def smb(host, ports=[445]):
-    color_print.white("[*] smb未授权访问测试开始")
-    for port in ports:
-        try:
-            conn = SMBConnection("", "", "", "", use_ntlm_v2=True)
-            if conn.connect(host, port, timeout=timeout):
-                color_print.green(f"[*] 检测到smb服务：{host}:{port}")
-                sharelist = conn.listShares()
-                for i in sharelist:
-                    try:
-                        conn.listPath(i.name, "/")
-                        color_print.red(f"[+] smb未授权目录：{host}:{port}/{i.name}")
-                    except:
-                        color_print.green(f"[*] smb目录：{host}:{port}/{i.name}")
-
-            conn.close()
-        except:
-            pass
+def docker_register(host, port=30000):
+    # exp: https://github.com/NotSoSecure/docker_fetch
+    try:
+        r = requests.get(f"http://{host}:{port}/v2/_catalog", timeout=timeout, verify=False)
+        if "repositories" in r.text:
+            color_print.red(f"[+] docker Registry API is not authorized to access：{host}:{port}")
+    except:
+        pass
+    try:
+        r = requests.get(f"http://{host}:{port}/v1/_catalog", timeout=timeout, verify=False)
+        if "repositories" in r.text:
+            color_print.red(f"[+] docker Registry API is not authorized to access：{host}:{port}")
+    except:
+        pass
 
 
-def poc(host, ports):
-    poc_list = ['redis', 'mongo', 'genkins', 'memcached', 'jboss', 'zookeeper', 'rsync', 'couchdb', \
-                'elasticsearch', 'hadoop', 'jupyter', 'docker', 'ftp', 'smb']
-    if ports:
-        jobs = [gevent.spawn(globals()[p], host, ports) for p in poc_list]
-    else:
-        jobs = [gevent.spawn(globals()[p], host) for p in poc_list]
+def smb(host, port=445):
+    try:
+        conn = SMBConnection("", "", "", "", use_ntlm_v2=True)
+        if conn.connect(host, port, timeout=timeout):
+            color_print.green(f"[*] smb service detected：{host}:{port}")
+            sharelist = conn.listShares()
+            for i in sharelist:
+                try:
+                    conn.listPath(i.name, "/")
+                    color_print.red(f"[+] smb unauthorised directory：{host}:{port}/{i.name}")
+                except:
+                    color_print.green(f"[*] smb directory：{host}:{port}/{i.name}")
 
-    gevent.joinall(jobs)
+        conn.close()
+    except:
+        pass
+
+
+def postgresql(host, port=5432):
+    try:
+        conn = psycopg2.connect(host=host, port=port, database="postgres",
+                                user="postgres", password="123456", connect_timeout=timeout)
+        conn.close()
+        color_print.red(f"[+] postgresql is not authorized：{host}:{port}:postgres：123456")
+    except:
+        if "no pg_hba.conf entry" in traceback.format_exc():
+            color_print.green(f"[+] postgresql service detected (local login only)：{host}:{port}")
+    # color_print.white(f"postgresql done")
+
+
+def oracle(host, port=1521):
+    try:
+        conn = cx_Oracle.connect("scott/tiger@" + host + ":" + str(port) + "/orcl", timeout=timeout)
+        conn.close()
+        color_print.red(f"[+] oracle weak password：{host}:{port}:scott:tiger")
+    except:
+        if "Cannot locate a 64-bit Oracle Client library" in traceback.format_exc():
+            color_print.red(f"[-] Oracle Instant Client not installed --> Oracle Instant Client")
+        elif "the account is locked" in traceback.format_exc():
+            color_print.green(f"[+] oracle service detected：{host}:{port}")
+    # color_print.white(f"oracle done")
+
+
+def mysql(host, port=3306):
+    try:
+        conn = pymysql.connect(host=host, port=port, user="root", password="123456",
+                               db='mysql', connect_timeout=timeout, read_timeout=timeout, write_timeout=timeout)
+        conn.close()
+        color_print.red(f"[+] mysql weak password：{host}:{port}:root:123456")
+    except:
+        #print(traceback.format_exc())
+        if "Access denied for user" in traceback.format_exc():
+            color_print.green(f"[+] detected mysql service：{host}:{port}")
+
+
+def mssql(host, port=1433):
+    socket.setdefaulttimeout(timeout)
+    payload = binascii.a2b_hex("1001010400000000fc00000001000071001000000683f2f8602e000000000000e001000088ffffff3604000056000d00700002007400090086000d00a000140000000000c8000a00dc000a00f0000600000000000000fc000000fc00000059005400530048004c005400310039003000360030003200370073006100b0a5d2a5f3a5b6a586a596a5e6a5f6a5c6a5700079006d007300730071006c003d0032002e0031002e0034003100390032002e003100360038002e003100330036002e003100320038003a003100340033003300440042002d004c00690062007200610072007900750073005f0065006e0067006c006900730068006d0061007300740065007200")
+    try:
+        s = socket.socket()
+        s.connect((host, port))
+        s.send(payload)
+        recv_data = s.recv(1024)
+        s.close()
+        # print(binascii.b2a_hex(recv_data))
+        # Login failed
+        if b"4c006f00670069006e0020006600610069006c00650064" in binascii.b2a_hex(recv_data):
+            color_print.green(f"[+] detected mssql service：{host}:{port}")
+        # master
+        elif b"6d00610073007400650072" in binascii.b2a_hex(recv_data):
+            color_print.red(f"[+] mssql weak password：{host}:{port}:sa:Qwe123456")
+    except:
+        # traceback.print_exc()
+        pass
+
+
+
+

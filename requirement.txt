@@ -1,0 +1,3 @@
+﻿pymysql
+cx_Oracle
+psycopg2
