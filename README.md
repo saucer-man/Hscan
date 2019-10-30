@@ -1,16 +1,16 @@
-## intro
+# intro
 
 Port scan script (unauthorized / weak password) 端口扫描脚本(未授权/弱口令)。
 
 Support for the following services 支持扫描以下服务
 
 ```angular
-redismongo, genkins, memcached, jboss, zookeeper, 
+redis, mongo, genkins, memcached, jboss, zookeeper, 
 rsync, couchdb, elasticsearch, hadoop, jupyter,
 docker, ftp, smb, postgresql, oracle, mssql, mysql
 ```
 
-## how to use?
+# how to use?
 
 - -H specify a single target 指定单个目标
 - -HF specify target file 指定目标文件
