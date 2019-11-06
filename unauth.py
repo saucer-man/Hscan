@@ -14,6 +14,7 @@ def generate_tasks(hosts, ports):
     poc_list = ['redis', 'mongo', 'genkins', 'memcached', 'jboss', 'zookeeper',
                 'rsync', 'couchdb', 'elasticsearch', 'hadoop', 'jupyter',
                 'docker', 'ftp', 'smb', 'postgresql', 'oracle', "mssql", 'mysql']
+    # poc_list = ['mysql']
     for poc in poc_list:
         for host in hosts:
             if len(ports) > 0:

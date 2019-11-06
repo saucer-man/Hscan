@@ -15,7 +15,7 @@ try:
     from smb.SMBConnection import SMBConnection
     import pymysql
     import cx_Oracle
-    import psycopg2
+    # import psycopg2
 except:
     color_print.red("[-]  module not found! \n[-] try: pip install -r requirement.txt ")
     sys.exit()
@@ -187,6 +187,7 @@ def hadoop(host, port=8088):
     except:
         pass
 
+
 def jupyter(host, port=8888):
     try:
         r = requests.get(f"http://{host}:{port}", timeout=timeout, verify=False)
@@ -194,6 +195,7 @@ def jupyter(host, port=8888):
             color_print.red(f"[+] jupyter is not authorized to access：{host}:{port}")
     except:
         pass
+
 
 def ftp(host, port=21):
     try:
@@ -205,6 +207,7 @@ def ftp(host, port=21):
         ftp.quit()
     except:
         pass
+
 
 def docker(host, port=2375):
     # exp: https://github.com/Tycx2ry/docker_api_vul
@@ -251,14 +254,36 @@ def smb(host, port=445):
 
 
 def postgresql(host, port=5432):
+    # try:
+    #     conn = psycopg2.connect(host=host, port=port, database="postgres",
+    #                             user="postgres", password="123456", connect_timeout=timeout)
+    #     conn.close()
+    #     color_print.red(f"[+] postgresql is not authorized：{host}:{port}:postgres：123456")
+    # except:
+    #     if "no pg_hba.conf entry" in traceback.format_exc():
+    #         color_print.green(f"[+] postgresql service detected (local login only)：{host}:{port}")
+
+    socket.setdefaulttimeout(timeout)
+    payload = binascii.a2b_hex("00000029000300007573657200706f73746772657300646174616261736500706f7374677265730000")
     try:
-        conn = psycopg2.connect(host=host, port=port, database="postgres",
-                                user="postgres", password="123456", connect_timeout=timeout)
-        conn.close()
-        color_print.red(f"[+] postgresql is not authorized：{host}:{port}:postgres：123456")
+        s = socket.socket()
+        s.connect((host, port))
+        s.send(payload)
+        recv_data = s.recv(1024)
+        s.close()
+        # print(binascii.b2a_hex(recv_data))
+        # no pg_hba.conf
+        if b"70675f6862612e636f6e66" in binascii.b2a_hex(recv_data):
+            color_print.green(f"[+] postgresql service detected (local login only)：{host}:{port}:postgres")
+        # R
+        elif binascii.b2a_hex(recv_data).startswith(b"520000000c0000000"):
+            color_print.green(f"[+] postgresql service detected (need password)：{host}:{port}:postgres")
+        # server_version
+        elif b"7365727665725f76657273696f6e" in binascii.b2a_hex(recv_data):
+            color_print.red(f"[+] postgresql is not authorized：{host}:{port}:postgres")
     except:
-        if "no pg_hba.conf entry" in traceback.format_exc():
-            color_print.green(f"[+] postgresql service detected (local login only)：{host}:{port}")
+        # traceback.print_exc()
+        pass
     # color_print.white(f"postgresql done")
 
 
