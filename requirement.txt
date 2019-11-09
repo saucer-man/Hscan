@@ -1,3 +1,4 @@
-﻿pymysql
+﻿pysmb
+pymysql
 cx_Oracle
 psycopg2
