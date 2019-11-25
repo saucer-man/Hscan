@@ -19,3 +19,11 @@ docker, ftp, smb, postgresql, oracle, mssql, mysql
 example:
 
 ![](https://github.com/saucer-man/unauth_scan/blob/master/doc/show.png)
+
+
+
+## 更新历史
+
+- 2019-11-25 
+
+  默认去除oracle弱口令测试，案例极少

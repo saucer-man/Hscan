@@ -14,7 +14,7 @@ from ftplib import FTP
 try:
     from smb.SMBConnection import SMBConnection
     import pymysql
-    import cx_Oracle
+    # import cx_Oracle
     # import psycopg2
 except:
     color_print.red("[-]  module not found! \n[-] try: pip install -r requirement.txt ")
@@ -287,17 +287,17 @@ def postgresql(host, port=5432):
     # color_print.white(f"postgresql done")
 
 
-def oracle(host, port=1521):
-    try:
-        conn = cx_Oracle.connect("scott/tiger@" + host + ":" + str(port) + "/orcl", timeout=timeout)
-        conn.close()
-        color_print.red(f"[+] oracle weak password：{host}:{port}:scott:tiger")
-    except:
-        if "Cannot locate a 64-bit Oracle Client library" in traceback.format_exc():
-            color_print.red(f"[-] Oracle Instant Client not installed --> Oracle Instant Client")
-        elif "the account is locked" in traceback.format_exc():
-            color_print.green(f"[+] oracle service detected：{host}:{port}")
-    # color_print.white(f"oracle done")
+# def oracle(host, port=1521):
+#     try:
+#         conn = cx_Oracle.connect("scott/tiger@" + host + ":" + str(port) + "/orcl", timeout=timeout)
+#         conn.close()
+#         color_print.red(f"[+] oracle weak password：{host}:{port}:scott:tiger")
+#     except:
+#         if "Cannot locate a 64-bit Oracle Client library" in traceback.format_exc():
+#             color_print.red(f"[-] Oracle Instant Client not installed --> Oracle Instant Client")
+#         elif "the account is locked" in traceback.format_exc():
+#             color_print.green(f"[+] oracle service detected：{host}:{port}")
+#     # color_print.white(f"oracle done")
 
 
 def mysql(host, port=3306):
