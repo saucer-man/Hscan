@@ -240,14 +240,23 @@ def elasticsearch_cve_2015_3337_rce_check(host, port=9200):
     return False
 
 
-def hadoop(host, port=8088):
+def hadoop_YARN(host, port=8088):
     try:
         r = requests.get(f"http://{host}:{port}/cluster", timeout=timeout, allow_redirects=True, verify=False)
         if "Hadoop" in r.text:
-            color_print.red(f"[+] hadoop is not authorized to access：{host}:{port}")
+            color_print.red(f"[+] hadoop YARN is not authorized to access：{host}:{port}")
     except:
         pass
 
+
+def hadoop_HDFS(host, port=50070):
+    try:
+        r = requests.get(f"http://{host}:{port}/explorer.html#/", timeout=timeout, allow_redirects=True, verify=False)
+        if "Browse Directory" in r.text:
+            color_print.red(f"[+] hadoop HDFS is not authorized to access：{host}:{port}")
+    except:
+        print(host)
+        
 
 def jupyter(host, port=8888):
     try:
@@ -382,7 +391,7 @@ def mssql(host, port=1433):
         s.send(payload)
         recv_data = s.recv(1024)
         s.close()
-        print(binascii.b2a_hex(recv_data))
+        # print(binascii.b2a_hex(recv_data))
         # master
         if b"6d00610073007400650072" in binascii.b2a_hex(recv_data):
             color_print.red(f"[+] mssql weak password：{host}:{port}:sa:Qwe123456")
@@ -390,7 +399,7 @@ def mssql(host, port=1433):
         elif b"27007300610027" in binascii.b2a_hex(recv_data):
             color_print.green(f"[+] detected mssql service：{host}:{port}")
     except:
-        traceback.print_exc()
+        # traceback.print_exc()
         pass
 
 

@@ -12,9 +12,9 @@ thread_count_lock = threading.Lock()
 def generate_tasks(hosts, ports):
     task_queue = queue.Queue()
     poc_list = ['redis', 'mongo', 'genkins', 'memcached', 'jboss', 'zookeeper',
-                'rsync', 'couchdb', 'elasticsearch', 'hadoop', 'jupyter',
-                'docker', 'ftp', 'smb', 'postgresql', "mssql", 'mysql']
-    # poc_list = ['oracle']
+                'rsync', 'couchdb', 'elasticsearch', 'hadoop_YARN', "hadoop_HDFS", 
+                'jupyter', 'docker', 'ftp', 'smb', 'postgresql', "mssql", 'mysql']
+    # poc_list = ["oracle"]
     for poc in poc_list:
         for host in hosts:
             if len(ports) > 0:
