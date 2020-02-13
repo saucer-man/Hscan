@@ -382,15 +382,15 @@ def mssql(host, port=1433):
         s.send(payload)
         recv_data = s.recv(1024)
         s.close()
-        # print(binascii.b2a_hex(recv_data))
-        # Login failed
-        if b"4c006f00670069006e0020006600610069006c00650064" in binascii.b2a_hex(recv_data):
-            color_print.green(f"[+] detected mssql service：{host}:{port}")
+        print(binascii.b2a_hex(recv_data))
         # master
-        elif b"6d00610073007400650072" in binascii.b2a_hex(recv_data):
+        if b"6d00610073007400650072" in binascii.b2a_hex(recv_data):
             color_print.red(f"[+] mssql weak password：{host}:{port}:sa:Qwe123456")
+        # Login failed
+        elif b"27007300610027" in binascii.b2a_hex(recv_data):
+            color_print.green(f"[+] detected mssql service：{host}:{port}")
     except:
-        # traceback.print_exc()
+        traceback.print_exc()
         pass
 
 
