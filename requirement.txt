@@ -1,5 +1,3 @@
 ﻿pysmb
 pymysql
-cx_Oracle
-psycopg2
 colorama
