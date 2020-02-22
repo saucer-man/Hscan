@@ -255,7 +255,8 @@ def hadoop_HDFS(host, port=50070):
         if "Browse Directory" in r.text:
             color_print.red(f"[+] hadoop HDFS is not authorized to access：{host}:{port}")
     except:
-        print(host)
+        # print(host)
+        pass
         
 
 def jupyter(host, port=8888):
