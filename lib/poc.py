@@ -6,6 +6,7 @@ import sys
 import socket
 import requests
 import re
+import json
 import binascii
 import traceback
 import urllib3
@@ -258,6 +259,34 @@ def hadoop_HDFS(host, port=50070):
         # print(host)
         pass
         
+def Apache_Flink(host, port=8081):
+    try:
+        # print(f"http://{host}:{port}/jar/upload")
+        res = requests.get(f"http://{host}:{port}", timeout=timeout, verify=False)
+        if"apache flink" in res.text.lower():
+            color_print.red(f"[+] Apache_Flink upload file to rce：{host}:{port}")
+        else:
+            pass
+    except Exception as e:
+        pass
+        
+
+def grafana(host, port=3000):
+    try:
+        headers={
+        "Content-Type": "application/json;charset=UTF-8"
+        }
+        data = {"user": "admin", "email": "", "password": "admin"}
+        res = requests.post(f"http://{host}:{port}/login", headers=headers, data=json.dumps(data), timeout=timeout, verify=False)
+        if "Logged in" in res.text:
+            color_print.red(f"[+] grafana weakpass admin/admin：{host}:{port}")
+        else:
+            res = requests.get(f"http://{host}:{port}")
+            if "grafana.com" in res.text:
+                color_print.green(f"[+] grafana service detected：{host}:{port}")
+    except Exception as e:
+        pass
+
 
 def jupyter(host, port=8888):
     try:

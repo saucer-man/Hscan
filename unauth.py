@@ -13,8 +13,9 @@ def generate_tasks(hosts, ports):
     task_queue = queue.Queue()
     poc_list = ['redis', 'mongo', 'genkins', 'memcached', 'jboss', 'zookeeper',
                 'rsync', 'couchdb', 'elasticsearch', 'hadoop_YARN', "hadoop_HDFS", 
-                'jupyter', 'docker', 'ftp', 'smb', 'postgresql', "mssql", 'mysql']
-    # poc_list = ["oracle"]
+                'jupyter', 'docker', 'ftp', 'smb', 'postgresql', "mssql", 'mysql',
+                'Apache_Flink', 'grafana']
+    # poc_list = []
     for poc in poc_list:
         for host in hosts:
             if len(ports) > 0:
