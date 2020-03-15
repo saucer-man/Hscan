@@ -101,6 +101,18 @@ def jboss(host, port=8080):
         pass
 
 
+def druid(host, port=80):
+    druid_path = [f"http://{host}:{port}/druid/index.html", f"http://{host}:{port}/system/index.html",
+                  f"http://{host}:{port}/webpage/system/druid/index.html"]
+    for path in druid_path:
+        try:
+            r = requests.get(path, timeout=timeout, allow_redirects=False, verify=False)
+            if "Druid Stat Index" in r.text:
+                color_print.red(f"Druid is not authorized to access: {path}")
+        except:
+            # traceback.print_exc()
+            pass
+
 def zookeeper(host, port=2181):
     socket.setdefaulttimeout(timeout)
 

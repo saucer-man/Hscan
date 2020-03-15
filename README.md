@@ -23,6 +23,12 @@ example:
 
 
 ## 更新历史
+
+- 2020-03-15 增加了
+    - Apache Flink任意Jar包上传导致远程代码执行漏洞
+    - grafana弱口令
+    - druid未授权访问
+
 - 2019-12-16  增加Elasticsearch漏洞扫描
 	- cve-2014-3120
 	- cve-2015-1427
