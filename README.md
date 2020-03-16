@@ -23,6 +23,9 @@ example:
 
 
 ## 更新历史
+- 2020-03-16 增加了
+    - Nexus Repository Manager <= 3.14.0 RCE(CVE-2019-7238) 
+    - Nexus Repository Manager <= 3.17.0 Week Pass 
 
 - 2020-03-15 增加了
     - Apache Flink任意Jar包上传导致远程代码执行漏洞

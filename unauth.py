@@ -14,7 +14,7 @@ def generate_tasks(hosts, ports):
     poc_list = ['redis', 'mongo', 'genkins', 'memcached', 'jboss', 'zookeeper',
                 'rsync', 'couchdb', 'elasticsearch', 'hadoop_YARN', "hadoop_HDFS", 
                 'jupyter', 'docker', 'ftp', 'smb', 'postgresql', "mssql", 'mysql',
-                'Apache_Flink', 'grafana', "druid"]
+                'Apache_Flink', 'grafana', "druid", "NXRM_rce", "NXRM_weak_pass"]
     # poc_list = []
     for poc in poc_list:
         for host in hosts:
