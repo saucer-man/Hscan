@@ -329,7 +329,7 @@ def NXRM_weak_pass(host, port=8081):
             if r.status_code == 204 or r.status_code == 405:
                 color_print.red(f"[+] Nexus Repository Manager weakpass：{host}:{port}/admin:admin123")
             else:
-                color_print.green(f"[+] dectect Nexus Repository Manager service：{host}:{port}/admin:admin123")
+                color_print.green(f"[+] dectect Nexus Repository Manager service：{host}:{port}")
     except Exception as e:
         # traceback.print_exc()
         pass
