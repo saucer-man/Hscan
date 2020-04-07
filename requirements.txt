@@ -1,0 +1,4 @@
+requests
+pysmb
+pymysql
+colorama

@@ -1,3 +1,0 @@
-﻿pysmb
-pymysql
-colorama
