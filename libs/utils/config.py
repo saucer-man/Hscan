@@ -8,7 +8,6 @@ See the file 'LICENSE' for copying permission
 
 from configparser import ConfigParser
 from libs.core.data import paths, logger
-import traceback
 
 class ConfigFileParser:
     @staticmethod
@@ -35,6 +34,18 @@ class ConfigFileParser:
 
     def port_scan_thread(self):
         return self._get_option('engine', 'port_scan_thread')
+
+    def thread(self):
+        return self._get_option('engine', 'thread')
+
+    def port_scan(self):
+        return self._get_option('engine', 'port_scan')
+
+    def alive_detect(self):
+        return self._get_option('engine', 'alive_detect')
+
+    def verbose(self):
+        return self._get_option('general', 'verbose')
 
 
 

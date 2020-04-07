@@ -43,7 +43,7 @@ def winping(ip):
 
 def alive_detect():
     tmp = set()   # 暂时用来存放一下存活的主机
-    if cmdLineOptions.alive_detect:
+    if conf.alive_detect:
         logger.info("host alive detection...")
         for target in conf.target:
             if ping(target):
@@ -56,3 +56,8 @@ def alive_detect():
         logger.info("skip host alive detection because you use -Pn")
     if len(conf.target) < 1:
         raise TargetException2
+    with open(conf.output_path, "a", encoding='utf-8') as f:
+        f.write("1. alive host\n")
+        for t in conf.target:
+            f.write(t+'\n')
+        f.write('\n\n')

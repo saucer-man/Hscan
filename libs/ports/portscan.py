@@ -1,6 +1,5 @@
 import socket
-from libs.core.data import conf, logger, cmdLineOptions
-from libs.utils.config import ConfigFileParser
+from libs.core.data import conf, logger
 import gevent
 import queue
 import sys
@@ -38,29 +37,23 @@ def portscan():
     for host in conf.target:
         conf.target_port_dict[host] = []
 
-    if cmdLineOptions.port_scan:
+    if conf.port_scan:
         generate_portscan_task()
-        # 如果要进行端口扫描，则加载端口扫描并发数
-        try:
-            # 如果配置文件中有写，就用配置文件的
-            if isinstance(ConfigFileParser().port_scan_thread(),int):
-                conf.port_scan_thread = ConfigFileParser().port_scan_thread()
-            elif isinstance(cmdLineOptions.port_scan_threads, int):
-                conf.port_scan_thread = cmdLineOptions.port_scan_threads
-            else:
-                conf.port_scan_thread = 200
-        except:
-            conf.port_scan_thread = 200
-
         conf.port_scan_task_num = conf.port_scan_task.qsize()
         if conf.port_scan_thread > conf.port_scan_task_num:
             conf.port_scan_thread = conf.port_scan_task_num
         logger.info(f"start to port scan...  (threads:{conf.port_scan_thread})")
         gevent.joinall([gevent.spawn(scan) for _ in range(0, conf.port_scan_thread)])
         for host, port in conf.target_port_dict.items():
-            logger.info(f"detect {host} opened len{port} ports: {port}")
+            logger.info(f"detect {host} opened {len(port)} ports: {port}")
     else:
         logger.info("skip open port scan")
         for host, port in conf.target_port_dict.items():
             conf.target_port_dict[host] = [int(i) for i in conf.port]
+
+    with open(conf.output_path, "a", encoding='utf-8') as f:
+        f.write("2. open port\n")
+        for host, port in conf.target_port_dict.items():
+            f.write(host + ': ' + str(port)+'\n')
+        f.write('\n\n')
 

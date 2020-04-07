@@ -3,33 +3,95 @@ from libs.core.data import cmdLineOptions, logger, paths, conf
 from libs.utils.config import ConfigFileParser
 import os
 import sys
-from libs.core.exception import PyVersionException, TargetException1, PocTaskException
+from libs.core.exception import TargetException1, PocTaskException
 import queue
 import importlib
 import traceback
+import logging
+import time
+
+
 def loader():
+    general()
     poc_loader()
     target_loader()
     port_loader()
     engine_loader()
 
+def general():
+    if cmdLineOptions.verbose or ConfigFileParser().verbose().strip() == "True":
+        logger.logger.setLevel(logging.DEBUG)
+    filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + '.txt'
+    conf.output_path = os.path.join(paths.RESULT_PATH, filename)
+
 def engine_loader():
     conf.timeout = cmdLineOptions.timeout
 
+    # load alive_detect
+    if cmdLineOptions.alive_detect and ConfigFileParser().alive_detect().strip() == "True":
+        conf.alive_detect = True
+    else:
+        conf.alive_detect = False
+
+    # load port_scan
+    if cmdLineOptions.port_scan and ConfigFileParser().port_scan().strip() == "True":
+        conf.port_scan = True
+    else:
+        conf.port_scan = False
+
+    if conf.port_scan:
+        # Load port scan concurrency
+        try:
+            if isinstance(cmdLineOptions.port_scan_threads, int):
+                conf.port_scan_thread = cmdLineOptions.port_scan_threads
+
+            elif isinstance(ConfigFileParser().port_scan_thread(), int):
+                conf.port_scan_thread = ConfigFileParser().port_scan_thread()
+            else:
+                conf.port_scan_thread = 200
+        except:
+            conf.port_scan_thread = 200
+
+    # Load pocs scan concurrency
+    try:
+        if isinstance(cmdLineOptions.thread, int):
+            conf.thread = cmdLineOptions.thread
+
+        elif isinstance(ConfigFileParser().thread(), int):
+            conf.thread = ConfigFileParser().thread()
+        else:
+            conf.thread = 200
+    except:
+        conf.thread = 200
+
 def port_loader():
     conf.port = set()
-    if ConfigFileParser().port():
+    # first load port from args
+    if cmdLineOptions.port:
+        ports = cmdLineOptions.port.split(",")
+        for port in ports:
+            if "-" in port:
+                for i in range(int(port.split("-")[0]), int(port.split("-")[-1])+1):
+                    conf.port.add(i)
+            else:
+                conf.port.add(int(port))
+    # otherwise load port from config file
+    elif ConfigFileParser().port():
         ports = ConfigFileParser().port().split(",")
         for port in ports:
-            conf.port.add(port.strip())
+            if "-" in port:
+                for i in range(int(port.split("-")[0]), int(port.split("-")[-1]) + 1):
+                    conf.port.add(i)
+            else:
+                conf.port.add(int(port))
+    # otherwise scan all ports
     else:
-        conf.port = set([i for i in range(1, 65546)])
-
+        conf.port = set([i for i in range(1, 65536)])
 
 
 def target_loader():
     conf.target = set()
-    # 加载命令行指定的或者file里面的target，因为是主机扫描器，所以target统一被换成host形式
+    # Load the target specified in the command line or the file, because it is a host scanner, the target is replaced by the host form
     if cmdLineOptions.url:
         conf.target.add(url2ip(cmdLineOptions.url))
         logger.info(f"loader target: {cmdLineOptions.url}-->{url2ip(cmdLineOptions.url)}")
@@ -38,7 +100,7 @@ def target_loader():
             for line in f.readlines():
                 conf.target.add(url2ip(line.strip()))
         logger.info(f"loader target from : {cmdLineOptions.target_file}")
-    # 加载conf配置文件里的命令行
+    # Load the targets in the conf configuration file
     if not paths.CONFIG_PATH:
         return
     if ConfigFileParser().target_url():
@@ -88,7 +150,10 @@ def load_poctasks():
         except:
             traceback.print_exc()
 
+    if conf.poctask_queue.qsize() < conf.thread:
+        conf.thread = conf.poctask_queue.qsize()
 
     if conf.poctask_queue.qsize() < 1:
         raise PocTaskException
+    conf.poctask_num = conf.poctask_queue.qsize()
     logger.info(f"total tasks: {conf.poctask_queue.qsize()}")
