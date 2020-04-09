@@ -7,7 +7,7 @@ def poc(host, port, timeout):
     try:
         res = requests.get(f"http://{host}:{port}", timeout=timeout, verify=False)
         if"node exporter" in res.text.lower():
-            return "SpringBoot Actuator is unauthorized"
+            return "springBoot actuator is unauthorized"
     except:
         pass
     return None

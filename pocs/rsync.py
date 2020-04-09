@@ -1,46 +1,24 @@
 import socket
-import re
+
+# rsync unauthorized
 
 def poc(host, port, timeout):
-    # refer: https://raw.githubusercontent.com/ysrc/xunfeng/master/vulscan/vuldb/rsync_weak_auth.py
-    def _rsync_init(host, port):
-        s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        socket.setdefaulttimeout(timeout)
-        s.connect((host, port))
-        s.send("@RSYNCD: 31\n".encode())
-        _ = s.recv(1024)
-        return s
-
+    # refer: https://github.com/JE2Se/VayneScan/blob/master/poc/rsyncunauth.py
     try:
-        # get directory
-        s = _rsync_init(host, port)
-        s.send(bytes.fromhex('0a'))
-        recv_data = s.recv(1024)
-        s.close()
-        paths = []
-        if recv_data:
-            for path_name in re.split('\n', recv_data.decode()):
-                if path_name and not path_name.startswith('@RSYNCD: '):
-                    paths.append(path_name.split('\t')[0].strip())
-        if paths:
-            # print(f"get directory bytes-----{recv_data}")
-            # print(f"The obtained directory is-----------{paths}")
-
-            # Try to see if can gain unauthorized access
-            for path in paths:
-                s = _rsync_init(host, port)
-                s.send(f"{path}\n".encode())
-                recv_data = s.recv(1024)
-                # print(f" Trying to grant unauthorized access to the accepted bytes-----------{recv_data}")
-
-                if recv_data.decode() == '\n':
-                    recv_data = s.recv(1024)
-                # The following instructions prove unauthorized access
-                if recv_data.decode().startswith('@RSYNCD: OK'):
-                    return "[+] rsync is unauthorized"
-                s.close()
-            return "detected rsync service"
-    except:
-        # traceback.print_exc()
+        payload = b"\x40\x52\x53\x59\x4e\x43\x44\x3a\x20\x33\x31\x2e\x30\x0a"
+        socket.setdefaulttimeout(timeout)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, port))
+        s.sendall(payload)
+        initinfo = s.recv(400)
+        if b"RSYNCD" in initinfo:
+            s.sendall(b"\x0a")
+            path = s.recv(200)
+            s.close()
+            if len(path) > 0:
+                return "rsync is unauthorized"
+            return "detect rsync service"
+    except Exception as e:
         pass
+        # print(e)
     return None

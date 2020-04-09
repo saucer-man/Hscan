@@ -27,4 +27,4 @@ def run():
     with open(conf.output_path, "a", encoding='utf-8') as f:
         f.write("3. pocs scan\n")
     gevent.joinall([gevent.spawn(poc_scan) for _ in range(0, conf.thread)])
-    logger.info(f"the scan is over and the results are saved in{conf.output_path}")
+    logger.info(f"the scan is over and the results are saved in {conf.output_path}")

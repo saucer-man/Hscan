@@ -1,8 +1,10 @@
 from smb.SMBConnection import SMBConnection
 
 
+# bug --> https://github.com/miketeo/pysmb/blob/b5b4012be9090c0bba4556a8fb95401937e98528/python3/nmb/base.py#L84
+
 def poc(host, port, timeout):
-    # smb未授权访问
+    # smb unauthorised
     try:
         conn = SMBConnection("", "", "", "", use_ntlm_v2=True)
         if conn.connect(host, port, timeout=timeout):
