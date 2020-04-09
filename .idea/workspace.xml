@@ -2,18 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="78c4e384-7731-4821-815e-2f05bd42a251" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Hscan.py" beforeDir="false" afterPath="$PROJECT_DIR$/Hscan.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.conf" beforeDir="false" afterPath="$PROJECT_DIR$/config.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/libs/controller/loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/controller/loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/libs/controller/poc_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/controller/poc_engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/libs/core/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/core/common.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/libs/parse/cmdline.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/parse/cmdline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/libs/ports/alive.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/ports/alive.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/libs/ports/portscan.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/ports/portscan.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/libs/utils/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/libs/utils/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -32,6 +21,9 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1ZFt7esXbl2L9bwId6Lc03RSXQY" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
@@ -226,7 +218,9 @@
       <workItem from="1585797594044" duration="9001000" />
       <workItem from="1585816306259" duration="55000" />
       <workItem from="1585816381080" duration="9402000" />
-      <workItem from="1586237551547" duration="10694000" />
+      <workItem from="1586237551547" duration="11299000" />
+      <workItem from="1586251256549" duration="2083000" />
+      <workItem from="1586420340426" duration="262000" />
     </task>
     <servers />
   </component>
@@ -241,7 +235,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
