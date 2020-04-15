@@ -1,7 +1,7 @@
-from smb.SMBConnection import SMBConnection
+from thirdlib.pysmb.smb.SMBConnection import SMBConnection
 
 
-# bug --> https://github.com/miketeo/pysmb/blob/b5b4012be9090c0bba4556a8fb95401937e98528/python3/nmb/base.py#L84
+# fix bug --> https://github.com/miketeo/pysmb/blob/b5b4012be9090c0bba4556a8fb95401937e98528/python3/nmb/base.py#L84
 
 def poc(host, port, timeout):
     # smb unauthorised

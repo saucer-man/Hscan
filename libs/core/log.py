@@ -7,9 +7,7 @@ See the file 'LICENSE' for copying permission
 
 
 import logging
-import os.path
-import time
-from colorama import init, Fore, Style
+from thirdlib.colorama import init, Fore, Style
 import sys
 
 init(autoreset=True)

@@ -1,6 +1,4 @@
 requests
-pysmb
 pymysql
-colorama
 gevent
 scapy

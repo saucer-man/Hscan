@@ -1,9 +1,8 @@
 from libs.core.data import paths
 import os
-from libs.core.data import logger, conf
+from libs.core.data import logger
 from urllib.parse import urlparse
 import socket
-import time
 
 def banner():
     return """
@@ -18,7 +17,6 @@ def banner():
 
 # set paths of project
 def set_paths(module_path):
-    # D:\pentest\漏洞扫描\Hscan
     paths.ROOT_PATH = module_path
     paths.CONFIG_PATH = os.path.join(paths.ROOT_PATH, "config.conf")
     paths.POCS_PATH = os.path.join(paths.ROOT_PATH, "pocs")
