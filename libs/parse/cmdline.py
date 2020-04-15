@@ -25,6 +25,6 @@ def cmdlineparse():
                         help='port scan threads, default 200')
     general = parser.add_argument_group("general", "general options")
     general.add_argument("-vv", dest="verbose", action='store_true',
-                        help = 'more detailed output')
+                         help='more detailed output')
     args = parser.parse_args()
     return args

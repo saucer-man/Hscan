@@ -24,7 +24,6 @@ def scan():
             s.close()
 
 
-
 def generate_portscan_task():
     conf.port_scan_task = queue.Queue()
     for host in conf.target:

@@ -1,0 +1,10 @@
+1. alive host
+106.54.44.192
+
+
+2. open port
+106.54.44.192: [11211]
+
+
+3. pocs scan
+106.54.44.192:11211 --> memcached is unauthorized
