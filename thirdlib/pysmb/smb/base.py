@@ -6,7 +6,7 @@ from .smb2_constants import *
 from .smb_structs import *
 from .smb2_structs import *
 from .security_descriptors import SecurityDescriptor
-from nmb.base import NMBSession
+from .nmb.base import NMBSession
 from .utils import convertFILETIMEtoEpoch
 from . import ntlm, securityblob
 

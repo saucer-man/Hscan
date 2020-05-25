@@ -4,7 +4,7 @@ from urllib.parse import (unwrap, unquote, splittype, splithost, quote,
      splitport, splittag, splitattr, splituser, splitpasswd, splitvalue)
 from urllib.response import addinfourl
 from urllib.request import ftpwrapper
-from nmb.NetBIOS import NetBIOS
+from .nmb.NetBIOS import NetBIOS
 from smb.SMBConnection import SMBConnection
 
 from io import BytesIO
