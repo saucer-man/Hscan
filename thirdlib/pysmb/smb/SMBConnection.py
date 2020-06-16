@@ -1,12 +1,12 @@
+import errno
+import select
+import socket
 
-import os, logging, select, socket, types, struct, errno
-from .smb_constants import *
+from .base import SMB, NotConnectedError, SMBTimeout
 from .smb_structs import *
-from .base import SMB, NotConnectedError, NotReadyError, SMBTimeout
 
 
 class SMBConnection(SMB):
-
     log = logging.getLogger('SMB.SMBConnection')
 
     #: SMB messages will never be signed regardless of remote server's configurations; access errors will occur if the remote server requires signing.
@@ -16,7 +16,8 @@ class SMBConnection(SMB):
     #: SMB messages will only be signed when remote server requires signing.
     SIGN_WHEN_REQUIRED = 2
 
-    def __init__(self, username, password, my_name, remote_name, domain = '', use_ntlm_v2 = True, sign_options = SIGN_WHEN_REQUIRED, is_direct_tcp = False):
+    def __init__(self, username, password, my_name, remote_name, domain='', use_ntlm_v2=True,
+                 sign_options=SIGN_WHEN_REQUIRED, is_direct_tcp=False):
         """
         Create a new SMBConnection instance.
 
@@ -80,7 +81,7 @@ class SMBConnection(SMB):
 
     def __exit__(self, *args):
         self.close()
-        
+
     #
     # Misc Properties
     #
@@ -90,12 +91,11 @@ class SMBConnection(SMB):
         """A convenient property to return True if the underlying SMB connection is using SMB2 protocol."""
         return self.is_using_smb2
 
-
     #
     # Public Methods
     #
 
-    def connect(self, ip, port = 139, sock_family = socket.AF_INET, timeout = 60):
+    def connect(self, ip, port=139, sock_family=socket.AF_INET, timeout=60):
         """
         Establish the SMB connection to the remote SMB/CIFS server.
 
@@ -110,7 +110,7 @@ class SMBConnection(SMB):
         self.auth_result = None
         self.sock = socket.socket(sock_family)
         self.sock.settimeout(timeout)
-        self.sock.connect(( ip, port ))
+        self.sock.connect((ip, port))
 
         self.is_busy = True
         try:
@@ -133,7 +133,7 @@ class SMBConnection(SMB):
             self.sock.close()
             self.sock = None
 
-    def listShares(self, timeout = 30):
+    def listShares(self, timeout=30):
         """
         Retrieve a list of shared resources on remote server.
 
@@ -142,7 +142,7 @@ class SMBConnection(SMB):
         if not self.sock:
             raise NotConnectedError('Not connected to server')
 
-        results = [ ]
+        results = []
 
         def cb(entries):
             self.is_busy = False
@@ -163,8 +163,8 @@ class SMBConnection(SMB):
         return results
 
     def listPath(self, service_name, path,
-                 search = SMB_FILE_ATTRIBUTE_READONLY | SMB_FILE_ATTRIBUTE_HIDDEN | SMB_FILE_ATTRIBUTE_SYSTEM | SMB_FILE_ATTRIBUTE_DIRECTORY | SMB_FILE_ATTRIBUTE_ARCHIVE | SMB_FILE_ATTRIBUTE_INCL_NORMAL,
-                 pattern = '*', timeout = 30):
+                 search=SMB_FILE_ATTRIBUTE_READONLY | SMB_FILE_ATTRIBUTE_HIDDEN | SMB_FILE_ATTRIBUTE_SYSTEM | SMB_FILE_ATTRIBUTE_DIRECTORY | SMB_FILE_ATTRIBUTE_ARCHIVE | SMB_FILE_ATTRIBUTE_INCL_NORMAL,
+                 pattern='*', timeout=30):
         """
         Retrieve a directory listing of files/folders at *path*
 
@@ -186,7 +186,7 @@ class SMBConnection(SMB):
         if not self.sock:
             raise NotConnectedError('Not connected to server')
 
-        results = [ ]
+        results = []
 
         def cb(entries):
             self.is_busy = False
@@ -198,7 +198,7 @@ class SMBConnection(SMB):
 
         self.is_busy = True
         try:
-            self._listPath(service_name, path, cb, eb, search = search, pattern = pattern, timeout = timeout)
+            self._listPath(service_name, path, cb, eb, search=search, pattern=pattern, timeout=timeout)
             while self.is_busy:
                 self._pollForNetBIOSPacket(timeout)
         finally:
@@ -206,7 +206,7 @@ class SMBConnection(SMB):
 
         return results
 
-    def listSnapshots(self, service_name, path, timeout = 30):
+    def listSnapshots(self, service_name, path, timeout=30):
         """
         Retrieve a list of available snapshots (shadow copies) for *path*.
 
@@ -219,7 +219,7 @@ class SMBConnection(SMB):
         if not self.sock:
             raise NotConnectedError('Not connected to server')
 
-        results = [ ]
+        results = []
 
         def cb(entries):
             self.is_busy = False
@@ -231,7 +231,7 @@ class SMBConnection(SMB):
 
         self.is_busy = True
         try:
-            self._listSnapshots(service_name, path, cb, eb, timeout = timeout)
+            self._listSnapshots(service_name, path, cb, eb, timeout=timeout)
             while self.is_busy:
                 self._pollForNetBIOSPacket(timeout)
         finally:
@@ -239,7 +239,7 @@ class SMBConnection(SMB):
 
         return results
 
-    def getAttributes(self, service_name, path, timeout = 30):
+    def getAttributes(self, service_name, path, timeout=30):
         """
         Retrieve information about the file at *path* on the *service_name*.
 
@@ -250,7 +250,7 @@ class SMBConnection(SMB):
         if not self.sock:
             raise NotConnectedError('Not connected to server')
 
-        results = [ ]
+        results = []
 
         def cb(info):
             self.is_busy = False
@@ -270,7 +270,7 @@ class SMBConnection(SMB):
 
         return results[0]
 
-    def getSecurity(self, service_name, path, timeout = 30):
+    def getSecurity(self, service_name, path, timeout=30):
         """
         Retrieve the security descriptor of the file at *path* on the *service_name*.
 
@@ -281,7 +281,7 @@ class SMBConnection(SMB):
         if not self.sock:
             raise NotConnectedError('Not connected to server')
 
-        results = [ ]
+        results = []
 
         def cb(info):
             self.is_busy = False
@@ -301,7 +301,7 @@ class SMBConnection(SMB):
 
         return results[0]
 
-    def retrieveFile(self, service_name, path, file_obj, timeout = 30):
+    def retrieveFile(self, service_name, path, file_obj, timeout=30):
         """
         Retrieve the contents of the file at *path* on the *service_name* and write these contents to the provided *file_obj*.
 
@@ -315,7 +315,7 @@ class SMBConnection(SMB):
         """
         return self.retrieveFileFromOffset(service_name, path, file_obj, 0, -1, timeout)
 
-    def retrieveFileFromOffset(self, service_name, path, file_obj, offset = 0, max_length = -1, timeout = 30):
+    def retrieveFileFromOffset(self, service_name, path, file_obj, offset=0, max_length=-1, timeout=30):
         """
         Retrieve the contents of the file at *path* on the *service_name* and write these contents to the provided *file_obj*.
 
@@ -331,7 +331,7 @@ class SMBConnection(SMB):
         if not self.sock:
             raise NotConnectedError('Not connected to server')
 
-        results = [ ]
+        results = []
 
         def cb(r):
             self.is_busy = False
@@ -343,7 +343,7 @@ class SMBConnection(SMB):
 
         self.is_busy = True
         try:
-            self._retrieveFileFromOffset(service_name, path, file_obj, cb, eb, offset, max_length, timeout = timeout)
+            self._retrieveFileFromOffset(service_name, path, file_obj, cb, eb, offset, max_length, timeout=timeout)
             while self.is_busy:
                 self._pollForNetBIOSPacket(timeout)
         finally:
@@ -351,7 +351,7 @@ class SMBConnection(SMB):
 
         return results[0]
 
-    def storeFile(self, service_name, path, file_obj, timeout = 30):
+    def storeFile(self, service_name, path, file_obj, timeout=30):
         """
         Store the contents of the *file_obj* at *path* on the *service_name*.
         If the file already exists on the remote server, it will be truncated and overwritten.
@@ -364,7 +364,7 @@ class SMBConnection(SMB):
         """
         return self.storeFileFromOffset(service_name, path, file_obj, 0, True, timeout)
 
-    def storeFileFromOffset(self, service_name, path, file_obj, offset = 0, truncate = False, timeout = 30):
+    def storeFileFromOffset(self, service_name, path, file_obj, offset=0, truncate=False, timeout=30):
         """
         Store the contents of the *file_obj* at *path* on the *service_name*.
 
@@ -379,7 +379,7 @@ class SMBConnection(SMB):
         if not self.sock:
             raise NotConnectedError('Not connected to server')
 
-        results = [ ]
+        results = []
 
         def cb(r):
             self.is_busy = False
@@ -391,7 +391,7 @@ class SMBConnection(SMB):
 
         self.is_busy = True
         try:
-            self._storeFileFromOffset(service_name, path, file_obj, cb, eb, offset, truncate = truncate, timeout = timeout)
+            self._storeFileFromOffset(service_name, path, file_obj, cb, eb, offset, truncate=truncate, timeout=timeout)
             while self.is_busy:
                 self._pollForNetBIOSPacket(timeout)
         finally:
@@ -399,7 +399,7 @@ class SMBConnection(SMB):
 
         return results[0]
 
-    def deleteFiles(self, service_name, path_file_pattern, timeout = 30):
+    def deleteFiles(self, service_name, path_file_pattern, timeout=30):
         """
         Delete one or more regular files. It supports the use of wildcards in file names, allowing for deletion of multiple files in a single request.
 
@@ -421,13 +421,13 @@ class SMBConnection(SMB):
 
         self.is_busy = True
         try:
-            self._deleteFiles(service_name, path_file_pattern, cb, eb, timeout = timeout)
+            self._deleteFiles(service_name, path_file_pattern, cb, eb, timeout=timeout)
             while self.is_busy:
                 self._pollForNetBIOSPacket(timeout)
         finally:
             self.is_busy = False
 
-    def resetFileAttributes(self, service_name, path_file_pattern, timeout = 30):
+    def resetFileAttributes(self, service_name, path_file_pattern, timeout=30):
         """
         Reset file attributes of one or more regular files or folders.
         It supports the use of wildcards in file names, allowing for unlocking of multiple files/folders in a single request.
@@ -452,14 +452,13 @@ class SMBConnection(SMB):
 
         self.is_busy = True
         try:
-            self._resetFileAttributes(service_name, path_file_pattern, cb, eb, timeout = timeout)
+            self._resetFileAttributes(service_name, path_file_pattern, cb, eb, timeout=timeout)
             while self.is_busy:
                 self._pollForNetBIOSPacket(timeout)
         finally:
             self.is_busy = False
 
-
-    def createDirectory(self, service_name, path, timeout = 30):
+    def createDirectory(self, service_name, path, timeout=30):
         """
         Creates a new directory *path* on the *service_name*.
 
@@ -480,13 +479,13 @@ class SMBConnection(SMB):
 
         self.is_busy = True
         try:
-            self._createDirectory(service_name, path, cb, eb, timeout = timeout)
+            self._createDirectory(service_name, path, cb, eb, timeout=timeout)
             while self.is_busy:
                 self._pollForNetBIOSPacket(timeout)
         finally:
             self.is_busy = False
 
-    def deleteDirectory(self, service_name, path, timeout = 30):
+    def deleteDirectory(self, service_name, path, timeout=30):
         """
         Delete the empty folder at *path* on *service_name*
 
@@ -507,13 +506,13 @@ class SMBConnection(SMB):
 
         self.is_busy = True
         try:
-            self._deleteDirectory(service_name, path, cb, eb, timeout = timeout)
+            self._deleteDirectory(service_name, path, cb, eb, timeout=timeout)
             while self.is_busy:
                 self._pollForNetBIOSPacket(timeout)
         finally:
             self.is_busy = False
 
-    def rename(self, service_name, old_path, new_path, timeout = 30):
+    def rename(self, service_name, old_path, new_path, timeout=30):
         """
         Rename a file or folder at *old_path* to *new_path* shared at *service_name*. Note that this method cannot be used to rename file/folder across different shared folders
 
@@ -541,7 +540,7 @@ class SMBConnection(SMB):
         finally:
             self.is_busy = False
 
-    def echo(self, data, timeout = 10):
+    def echo(self, data, timeout=10):
         """
         Send an echo command containing *data* to the remote SMB/CIFS server. The remote SMB/CIFS will reply with the same *data*.
 
@@ -551,7 +550,7 @@ class SMBConnection(SMB):
         if not self.sock:
             raise NotConnectedError('Not connected to server')
 
-        results = [ ]
+        results = []
 
         def cb(r):
             self.is_busy = False
@@ -585,7 +584,7 @@ class SMBConnection(SMB):
                 if expiry_time < time.time():
                     raise SMBTimeout
 
-                ready, _, _ = select.select([ self.sock.fileno() ], [ ], [ ], timeout)
+                ready, _, _ = select.select([self.sock.fileno()], [], [], timeout)
                 if not ready:
                     raise SMBTimeout
 
@@ -612,7 +611,7 @@ class SMBConnection(SMB):
                 if expiry_time < time.time():
                     raise SMBTimeout
 
-                ready, _, _ = select.select([ self.sock.fileno() ], [ ], [ ], timeout)
+                ready, _, _ = select.select([self.sock.fileno()], [], [], timeout)
                 if not ready:
                     raise SMBTimeout
 

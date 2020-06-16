@@ -1,8 +1,8 @@
+import re
+import string
 
-import string, re
 
-
-def encode_name(name, type, scope = None):
+def encode_name(name, type, scope=None):
     """
     Perform first and second level encoding of name as specified in RFC 1001 (Section 4)
     """

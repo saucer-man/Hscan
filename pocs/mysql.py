@@ -1,5 +1,6 @@
-import pymysql
 import traceback
+
+import pymysql
 
 
 def poc(host, port, timeout):

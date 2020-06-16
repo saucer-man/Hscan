@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import time
-from libs.core.data import logger, conf
-import gevent
 import sys
+
+import gevent
+
+from libs.core.data import logger, conf
+
 
 def poc_scan():
     while conf.poctask_queue.qsize() > 0:
         task = conf.poctask_queue.get()
         res = task["poc"].poc(task['host'], task['port'], conf.timeout)
         result_handler(task, res)
-        sys.stdout.write("(" + str(conf.poctask_num -conf.poctask_queue.qsize()) + "/" + str(conf.poctask_num) + ")\r")
+        sys.stdout.write("(" + str(conf.poctask_num - conf.poctask_queue.qsize()) + "/" + str(conf.poctask_num) + ")\r")
         sys.stdout.flush()
 
 
 def result_handler(task, res):
     if not res:
         return
-    logger.warning(f"{task['host']}:{task['port']} --> {res}")
+    elif isinstance(res, list):
+        for r in res:
+            logger.warning(f"{task['host']}:{task['port']} --> {r}")
+    else:
+        logger.warning(f"{task['host']}:{task['port']} --> {res}")
     with open(conf.output_path, "a", encoding='utf-8') as f:
         f.write(f"{task['host']}:{task['port']} --> {res}\n")
+
 
 def run():
     logger.info(f"begin poc scan...  (threads: {conf.thread})")

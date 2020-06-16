@@ -1,4 +1,3 @@
-
 # Bitmask for Flags field in SMB2 message header
 SMB2_FLAGS_SERVER_TO_REDIR = 0x01
 SMB2_FLAGS_ASYNC_COMMAND = 0x02

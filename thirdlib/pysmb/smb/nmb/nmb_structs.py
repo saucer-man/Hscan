@@ -1,7 +1,8 @@
-
 import struct
 
+
 class NMBError(Exception): pass
+
 
 class NotConnectedError(NMBError):
     """
@@ -9,8 +10,8 @@ class NotConnectedError(NMBError):
     """
     pass
 
-class NMBSessionMessage:
 
+class NMBSessionMessage:
     HEADER_STRUCT_FORMAT = '>BBH'
     HEADER_STRUCT_SIZE = struct.calcsize(HEADER_STRUCT_FORMAT)
 
@@ -30,7 +31,8 @@ class NMBSessionMessage:
             return 0
 
         self.reset()
-        self.type, self.flags, length = struct.unpack(self.HEADER_STRUCT_FORMAT, data[offset:offset+self.HEADER_STRUCT_SIZE])
+        self.type, self.flags, length = struct.unpack(self.HEADER_STRUCT_FORMAT,
+                                                      data[offset:offset + self.HEADER_STRUCT_SIZE])
 
         if self.flags & 0x01:
             length |= 0x010000
@@ -38,11 +40,11 @@ class NMBSessionMessage:
         if data_len < offset + self.HEADER_STRUCT_SIZE + length:
             return 0
 
-        self.data = data[offset+self.HEADER_STRUCT_SIZE:offset+self.HEADER_STRUCT_SIZE+length]
+        self.data = data[offset + self.HEADER_STRUCT_SIZE:offset + self.HEADER_STRUCT_SIZE + length]
         return self.HEADER_STRUCT_SIZE + length
 
-class DirectTCPSessionMessage(NMBSessionMessage):
 
+class DirectTCPSessionMessage(NMBSessionMessage):
     HEADER_STRUCT_FORMAT = '>I'
     HEADER_STRUCT_SIZE = struct.calcsize(HEADER_STRUCT_FORMAT)
 
@@ -54,7 +56,7 @@ class DirectTCPSessionMessage(NMBSessionMessage):
             return 0
 
         self.reset()
-        length = struct.unpack(self.HEADER_STRUCT_FORMAT, data[offset:offset+self.HEADER_STRUCT_SIZE])[0]
+        length = struct.unpack(self.HEADER_STRUCT_FORMAT, data[offset:offset + self.HEADER_STRUCT_SIZE])[0]
 
         if length >> 24 != 0:
             raise NMBError("Invalid protocol header for Direct TCP session message")
@@ -62,5 +64,5 @@ class DirectTCPSessionMessage(NMBSessionMessage):
         if data_len < offset + self.HEADER_STRUCT_SIZE + length:
             return 0
 
-        self.data = data[offset+self.HEADER_STRUCT_SIZE:offset+self.HEADER_STRUCT_SIZE+length]
+        self.data = data[offset + self.HEADER_STRUCT_SIZE:offset + self.HEADER_STRUCT_SIZE + length]
         return self.HEADER_STRUCT_SIZE + length

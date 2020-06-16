@@ -7,7 +7,9 @@ See the file 'LICENSE' for copying permission
 """
 
 from configparser import ConfigParser
+
 from libs.core.data import paths, logger
+
 
 class ConfigFileParser:
     @staticmethod
@@ -46,10 +48,3 @@ class ConfigFileParser:
 
     def verbose(self):
         return self._get_option('general', 'verbose')
-
-
-
-
-
-
-

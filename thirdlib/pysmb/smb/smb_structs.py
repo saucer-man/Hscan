@@ -1,8 +1,11 @@
-
-import os, sys, struct, types, logging, binascii, time
+import binascii
+import logging
+import os
+import struct
+import time
 from io import StringIO
-from .smb_constants import *
 
+from .smb_constants import *
 
 # Set to True if you want to enable support for extended security. Required for Windows Vista and later
 SUPPORT_EXTENDED_SECURITY = True
@@ -11,13 +14,13 @@ SUPPORT_EXTENDED_SECURITY = True
 SUPPORT_SMB2 = True
 
 # Supported dialects
-DIALECTS = [ ]
-for i, ( name, dialect ) in enumerate([ ( 'NT_LAN_MANAGER_DIALECT', b'NT LM 0.12' ), ]):
+DIALECTS = []
+for i, (name, dialect) in enumerate([('NT_LAN_MANAGER_DIALECT', b'NT LM 0.12'), ]):
     DIALECTS.append(dialect)
     globals()[name] = i
 
-DIALECTS2 = [ ]
-for i, ( name, dialect ) in enumerate([ ( 'SMB2_DIALECT', b'SMB 2.002' ) ]):
+DIALECTS2 = []
+for i, (name, dialect) in enumerate([('SMB2_DIALECT', b'SMB 2.002')]):
     DIALECTS2.append(dialect)
     globals()[name] = i + len(DIALECTS)
 
@@ -32,7 +35,7 @@ class UnsupportedFeature(Exception):
 
 class ProtocolError(Exception):
 
-    def __init__(self, message, data_buf = None, smb_message = None):
+    def __init__(self, message, data_buf=None, smb_message=None):
         self.message = message
         self.data_buf = data_buf
         self.smb_message = smb_message
@@ -51,10 +54,12 @@ class ProtocolError(Exception):
 
         return b.getvalue()
 
+
 class SMB2ProtocolHeaderError(ProtocolError):
 
     def __init__(self):
         ProtocolError.__init__(self, "Packet header belongs to SMB2")
+
 
 class OperationFailure(Exception):
 
@@ -92,7 +97,7 @@ class SMBError:
         if self.is_ntstatus:
             return 'NTSTATUS=0x%08X' % self.internal_value
         else:
-            return 'ErrorClass=0x%02X ErrorCode=0x%04X' % ( self.internal_value >> 24, self.internal_value & 0xFFFF )
+            return 'ErrorClass=0x%02X ErrorCode=0x%04X' % (self.internal_value >> 24, self.internal_value & 0xFFFF)
 
     @property
     def hasError(self):
@@ -100,14 +105,13 @@ class SMBError:
 
 
 class SMBMessage:
-
     HEADER_STRUCT_FORMAT = "<4sBIBHHQxxHHHHB"
     HEADER_STRUCT_SIZE = struct.calcsize(HEADER_STRUCT_FORMAT)
 
     log = logging.getLogger('SMB.SMBMessage')
     protocol = 1
 
-    def __init__(self, payload = None):
+    def __init__(self, payload=None):
         self.reset()
         if payload:
             self.payload = payload
@@ -115,17 +119,19 @@ class SMBMessage:
 
     def __str__(self):
         b = StringIO()
-        b.write('Command: 0x%02X (%s) %s' % ( self.command, SMB_COMMAND_NAMES.get(self.command, '<unknown>'), os.linesep ))
-        b.write('Status: %s %s' % ( str(self.status), os.linesep ))
-        b.write('Flags: 0x%02X %s' % ( self.flags, os.linesep ))
-        b.write('Flags2: 0x%04X %s' % ( self.flags2, os.linesep ))
-        b.write('PID: %d %s' % ( self.pid, os.linesep ))
-        b.write('UID: %d %s' % ( self.uid, os.linesep ))
-        b.write('MID: %d %s' % ( self.mid, os.linesep ))
-        b.write('TID: %d %s' % ( self.tid, os.linesep ))
-        b.write('Security: 0x%016X %s' % ( self.security, os.linesep ))
-        b.write('Parameters: %d bytes %s%s %s' % ( len(self.parameters_data), os.linesep, str(binascii.hexlify(self.parameters_data)), os.linesep ))
-        b.write('Data: %d bytes %s%s %s' % ( len(self.data), os.linesep, str(binascii.hexlify(self.data)), os.linesep ))
+        b.write(
+            'Command: 0x%02X (%s) %s' % (self.command, SMB_COMMAND_NAMES.get(self.command, '<unknown>'), os.linesep))
+        b.write('Status: %s %s' % (str(self.status), os.linesep))
+        b.write('Flags: 0x%02X %s' % (self.flags, os.linesep))
+        b.write('Flags2: 0x%04X %s' % (self.flags2, os.linesep))
+        b.write('PID: %d %s' % (self.pid, os.linesep))
+        b.write('UID: %d %s' % (self.uid, os.linesep))
+        b.write('MID: %d %s' % (self.mid, os.linesep))
+        b.write('TID: %d %s' % (self.tid, os.linesep))
+        b.write('Security: 0x%016X %s' % (self.security, os.linesep))
+        b.write('Parameters: %d bytes %s%s %s' % (
+        len(self.parameters_data), os.linesep, str(binascii.hexlify(self.parameters_data)), os.linesep))
+        b.write('Data: %d bytes %s%s %s' % (len(self.data), os.linesep, str(binascii.hexlify(self.data)), os.linesep))
         return b.getvalue()
 
     def reset(self):
@@ -197,7 +203,8 @@ class SMBMessage:
 
         protocol, self.command, status, self.flags, \
         self.flags2, pid_high, self.security, self.tid, \
-        pid_low, self.uid, self.mid, params_count = struct.unpack(self.HEADER_STRUCT_FORMAT, buf[:self.HEADER_STRUCT_SIZE])
+        pid_low, self.uid, self.mid, params_count = struct.unpack(self.HEADER_STRUCT_FORMAT,
+                                                                  buf[:self.HEADER_STRUCT_SIZE])
 
         if protocol == b'\xFESMB':
             raise SMB2ProtocolHeaderError()
@@ -213,8 +220,8 @@ class SMBMessage:
             # Not enough data in buf to decode up to body length
             raise ProtocolError('Not enough data. Parameters list decoding failed', buf)
 
-        datalen_offset = offset + params_count*2
-        body_len = struct.unpack('<H', buf[datalen_offset:datalen_offset+2])[0]
+        datalen_offset = offset + params_count * 2
+        body_len = struct.unpack('<H', buf[datalen_offset:datalen_offset + 2])[0]
         if body_len > 0 and buf_len < (datalen_offset + 2 + body_len):
             # Not enough data in buf to decode body
             raise ProtocolError('Not enough data. Body decoding failed', buf)
@@ -222,7 +229,7 @@ class SMBMessage:
         self.parameters_data = buf[offset:datalen_offset]
 
         if body_len > 0:
-            self.data = buf[datalen_offset+2:datalen_offset+2+body_len]
+            self.data = buf[datalen_offset + 2:datalen_offset + 2 + body_len]
 
         self.raw_data = buf
         self._decodePayload()
@@ -256,7 +263,6 @@ class SMBMessage:
 
 
 class Payload:
-
     DEFAULT_ANDX_PARAM_HEADER = b'\xFF\x00\x00\x00'
     DEFAULT_ANDX_PARAM_SIZE = 4
 
@@ -265,7 +271,7 @@ class Payload:
         # rewritten to check for OEM/Unicode strings which will be tedious. Fortunately, almost all tested CIFS services
         # support SMB_FLAGS2_UNICODE by default.
         assert message.payload == self
-        message.flags =  SMB_FLAGS_CASE_INSENSITIVE | SMB_FLAGS_CANONICALIZED_PATHS
+        message.flags = SMB_FLAGS_CASE_INSENSITIVE | SMB_FLAGS_CANONICALIZED_PATHS
         message.flags2 = SMB_FLAGS2_UNICODE | SMB_FLAGS2_NT_STATUS | SMB_FLAGS2_IS_LONG_NAME | SMB_FLAGS2_LONG_NAMES
 
         if SUPPORT_EXTENDED_SECURITY:
@@ -294,9 +300,9 @@ class ComNegotiateRequest(Payload):
         assert message.payload == self
         message.parameters_data = b''
         if SUPPORT_SMB2:
-            message.data = b''.join([b'\x02'+s+b'\x00' for s in DIALECTS + DIALECTS2])
+            message.data = b''.join([b'\x02' + s + b'\x00' for s in DIALECTS + DIALECTS2])
         else:
-            message.data = b''.join([b'\x02'+s+b'\x00' for s in DIALECTS])
+            message.data = b''.join([b'\x02' + s + b'\x00' for s in DIALECTS])
 
 
 class ComNegotiateResponse(Payload):
@@ -342,24 +348,28 @@ class ComNegotiateResponse(Payload):
 
         self.security_mode, self.max_mpx_count, self.max_number_vcs, self.max_buffer_size, \
         self.max_raw_size, self.session_key, self.capabilities, self.system_time, self.server_time_zone, \
-        self.challenge_length = ( 0, ) * 10
+        self.challenge_length = (0,) * 10
 
         data_len = len(message.parameters_data)
         if data_len < 2:
-            raise ProtocolError('Not enough data to decode SMB_COM_NEGOTIATE dialect_index field', message.raw_data, message)
+            raise ProtocolError('Not enough data to decode SMB_COM_NEGOTIATE dialect_index field', message.raw_data,
+                                message)
 
         self.dialect_index = struct.unpack('<H', message.parameters_data[:2])[0]
         if self.dialect_index == NT_LAN_MANAGER_DIALECT:
             if data_len != (0x11 * 2):
-                raise ProtocolError('NT LAN Manager dialect selected in SMB_COM_NEGOTIATE but parameters bytes count (%d) does not meet specs' % data_len,
-                                    message.raw_data, message)
+                raise ProtocolError(
+                    'NT LAN Manager dialect selected in SMB_COM_NEGOTIATE but parameters bytes count (%d) does not meet specs' % data_len,
+                    message.raw_data, message)
             else:
                 _, self.security_mode, self.max_mpx_count, self.max_number_vcs, self.max_buffer_size, \
                 self.max_raw_size, self.session_key, self.capabilities, self.system_time, self.server_time_zone, \
-                self.challenge_length = struct.unpack(self.PAYLOAD_STRUCT_FORMAT, message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
+                self.challenge_length = struct.unpack(self.PAYLOAD_STRUCT_FORMAT,
+                                                      message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
         elif self.dialect_index == 0xFFFF:
-            raise ProtocolError('Server does not support any of the pysmb dialects. Please email pysmb to add in support for your OS',
-                                message.raw_data, message)
+            raise ProtocolError(
+                'Server does not support any of the pysmb dialects. Please email pysmb to add in support for your OS',
+                message.raw_data, message)
         else:
             raise ProtocolError('Unknown dialect index (0x%04X)' % self.dialect_index, message.raw_data, message)
 
@@ -373,7 +383,7 @@ class ComNegotiateResponse(Payload):
                     s = b''
                     offset = self.challenge_length
                     while offset < data_len:
-                        _s = message.data[offset:offset+2]
+                        _s = message.data[offset:offset + 2]
                         if _s == b'\0\0':
                             self.domain = s.decode('UTF-16LE')
                             break
@@ -381,10 +391,14 @@ class ComNegotiateResponse(Payload):
                             s += _s
                             offset += 2
                 else:
-                    raise ProtocolError('Not enough data to decode SMB_COM_NEGOTIATE (without security extensions) Challenge field', message.raw_data, message)
+                    raise ProtocolError(
+                        'Not enough data to decode SMB_COM_NEGOTIATE (without security extensions) Challenge field',
+                        message.raw_data, message)
         else:
             if data_len < 16:
-                raise ProtocolError('Not enough data to decode SMB_COM_NEGOTIATE (with security extensions) ServerGUID field', message.raw_data, message)
+                raise ProtocolError(
+                    'Not enough data to decode SMB_COM_NEGOTIATE (with security extensions) ServerGUID field',
+                    message.raw_data, message)
 
             self.server_guid = message.data[:16]
             self.security_blob = message.data[16:]
@@ -465,7 +479,8 @@ class ComSessionSetupAndxRequest__NoSecurityExtension(Payload):
                         0,
                         CAP_UNICODE | CAP_LARGE_FILES | CAP_STATUS32)
 
-        est_offset = SMBMessage.HEADER_STRUCT_SIZE + len(message.parameters_data)  # To check if data until SMB paramaters are aligned to a 16-bit boundary
+        est_offset = SMBMessage.HEADER_STRUCT_SIZE + len(
+            message.parameters_data)  # To check if data until SMB paramaters are aligned to a 16-bit boundary
 
         message.data = self.password
         if (est_offset + len(message.data)) % 2 != 0 and message.flags2 & SMB_FLAGS2_UNICODE:
@@ -480,7 +495,8 @@ class ComSessionSetupAndxRequest__NoSecurityExtension(Payload):
             message.data = message.data + b'\0'
 
         if message.flags2 & SMB_FLAGS2_UNICODE:
-            message.data = message.data + self.domain.encode('UTF-16LE') + b'\0\0' + 'pysmb'.encode('UTF-16LE') + b'\0\0'
+            message.data = message.data + self.domain.encode('UTF-16LE') + b'\0\0' + 'pysmb'.encode(
+                'UTF-16LE') + b'\0\0'
         else:
             message.data = message.data + self.domain.encode('UTF-8') + b'\0pysmb\0'
 
@@ -519,17 +535,26 @@ class ComSessionSetupAndxResponse(Payload):
         if not message.hasExtendedSecurity:
             if not message.status.hasError:
                 if len(message.parameters_data) < self.NOSECURE_PARAMETER_STRUCT_SIZE:
-                    raise ProtocolError('Not enough data to decode SMB_COM_SESSION_SETUP_ANDX (no security extensions) parameters', message.raw_data, message)
+                    raise ProtocolError(
+                        'Not enough data to decode SMB_COM_SESSION_SETUP_ANDX (no security extensions) parameters',
+                        message.raw_data, message)
 
-                _, _, _, self.action = struct.unpack(self.NOSECURE_PARAMETER_STRUCT_FORMAT, message.parameters_data[:self.NOSECURE_PARAMETER_STRUCT_SIZE])
+                _, _, _, self.action = struct.unpack(self.NOSECURE_PARAMETER_STRUCT_FORMAT,
+                                                     message.parameters_data[:self.NOSECURE_PARAMETER_STRUCT_SIZE])
         else:
-            if not message.status.hasError or message.status.internal_value == 0xc0000016:   # STATUS_MORE_PROCESSING_REQUIRED
+            if not message.status.hasError or message.status.internal_value == 0xc0000016:  # STATUS_MORE_PROCESSING_REQUIRED
                 if len(message.parameters_data) < self.SECURE_PARAMETER_STRUCT_SIZE:
-                    raise ProtocolError('Not enough data to decode SMB_COM_SESSION_SETUP_ANDX (with security extensions) parameters', message.raw_data, message)
+                    raise ProtocolError(
+                        'Not enough data to decode SMB_COM_SESSION_SETUP_ANDX (with security extensions) parameters',
+                        message.raw_data, message)
 
-                _, _, _, self.action, blob_length = struct.unpack(self.SECURE_PARAMETER_STRUCT_FORMAT, message.parameters_data[:self.SECURE_PARAMETER_STRUCT_SIZE])
+                _, _, _, self.action, blob_length = struct.unpack(self.SECURE_PARAMETER_STRUCT_FORMAT,
+                                                                  message.parameters_data[
+                                                                  :self.SECURE_PARAMETER_STRUCT_SIZE])
                 if len(message.data) < blob_length:
-                    raise ProtocolError('Not enough data to decode SMB_COM_SESSION_SETUP_ANDX (with security extensions) security blob', message.raw_data, message)
+                    raise ProtocolError(
+                        'Not enough data to decode SMB_COM_SESSION_SETUP_ANDX (with security extensions) security blob',
+                        message.raw_data, message)
 
                 self.security_blob = message.data[:blob_length]
 
@@ -545,7 +570,7 @@ class ComTreeConnectAndxRequest(Payload):
     PAYLOAD_STRUCT_FORMAT = '<HH'
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
-    def __init__(self, path, service, password = ''):
+    def __init__(self, path, service, password=''):
         self.path = path
         self.service = service
         self.password = password + '\0'
@@ -560,8 +585,9 @@ class ComTreeConnectAndxRequest(Payload):
             self.DEFAULT_ANDX_PARAM_HEADER + \
             struct.pack(self.PAYLOAD_STRUCT_FORMAT,
                         0x08 | \
-                            ((message.hasExtendedSecurity and 0x0004) or 0x00) | \
-                            ((message.tid and message.tid != 0xffff and 0x0001) or 0x00),  # Disconnect tid, if message.tid must be non-zero
+                        ((message.hasExtendedSecurity and 0x0004) or 0x00) | \
+                        ((message.tid and message.tid != 0xffff and 0x0001) or 0x00),
+                        # Disconnect tid, if message.tid must be non-zero
                         password_len)
 
         padding = b''
@@ -569,7 +595,8 @@ class ComTreeConnectAndxRequest(Payload):
             padding = b'\0'
 
         # Note that service field is never encoded in UTF-16LE. [MS-CIFS]: 2.2.1.1
-        message.data = self.password.encode('UTF-8') + padding + self.path.encode('UTF-16LE') + b'\0\0' + self.service.encode('UTF-8') + b'\0'
+        message.data = self.password.encode('UTF-8') + padding + self.path.encode(
+            'UTF-16LE') + b'\0\0' + self.service.encode('UTF-8') + b'\0'
 
 
 class ComTreeConnectAndxResponse(Payload):
@@ -592,9 +619,11 @@ class ComTreeConnectAndxResponse(Payload):
 
         if not message.status.hasError:
             if len(message.parameters_data) < self.PAYLOAD_STRUCT_SIZE:
-                raise ProtocolError('Not enough data to decode SMB_COM_TREE_CONNECT_ANDX parameters', message.raw_data, message)
+                raise ProtocolError('Not enough data to decode SMB_COM_TREE_CONNECT_ANDX parameters', message.raw_data,
+                                    message)
 
-            _, _, _, self.optional_support = struct.unpack(self.PAYLOAD_STRUCT_FORMAT, message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
+            _, _, _, self.optional_support = struct.unpack(self.PAYLOAD_STRUCT_FORMAT,
+                                                           message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
 
 
 class ComNTCreateAndxRequest(Payload):
@@ -608,8 +637,8 @@ class ComNTCreateAndxRequest(Payload):
     PAYLOAD_STRUCT_FORMAT = '<BHIIIQIIIIIB'
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
-    def __init__(self, filename, flags = 0, root_fid = 0, access_mask = 0, allocation_size = 0, ext_attr = 0,
-                 share_access = 0, create_disp = 0, create_options = 0, impersonation = 0, security_flags = 0):
+    def __init__(self, filename, flags=0, root_fid=0, access_mask=0, allocation_size=0, ext_attr=0,
+                 share_access=0, create_disp=0, create_options=0, impersonation=0, security_flags=0):
         self.filename = (filename + '\0').encode('UTF-16LE')
         self.flags = flags
         self.root_fid = root_fid
@@ -632,18 +661,18 @@ class ComNTCreateAndxRequest(Payload):
         message.parameters_data = \
             self.DEFAULT_ANDX_PARAM_HEADER + \
             struct.pack(self.PAYLOAD_STRUCT_FORMAT,
-                        0x00,                  # reserved
-                        filename_len,          # NameLength
-                        self.flags,            # Flags
-                        self.root_fid,         # RootDirectoryFID
-                        self.access_mask,      # DesiredAccess
+                        0x00,  # reserved
+                        filename_len,  # NameLength
+                        self.flags,  # Flags
+                        self.root_fid,  # RootDirectoryFID
+                        self.access_mask,  # DesiredAccess
                         self.allocation_size,  # AllocationSize
-                        self.ext_attr,         # ExtFileAttributes
-                        self.share_access,     # ShareAccess
-                        self.create_disp,      # CreateDisposition
-                        self.create_options,   # CreateOptions
-                        self.impersonation,    # ImpersonationLevel
-                        self.security_flags)   # SecurityFlags
+                        self.ext_attr,  # ExtFileAttributes
+                        self.share_access,  # ShareAccess
+                        self.create_disp,  # CreateDisposition
+                        self.create_options,  # CreateOptions
+                        self.impersonation,  # ImpersonationLevel
+                        self.security_flags)  # SecurityFlags
 
         padding = b''
         if (message.HEADER_STRUCT_SIZE + len(message.parameters_data)) % 2 != 0:
@@ -672,9 +701,11 @@ class ComNTCreateAndxResponse(Payload):
 
         if not message.status.hasError:
             if len(message.parameters_data) < self.PAYLOAD_STRUCT_SIZE:
-                raise ProtocolError('Not enough data to decode SMB_COM_NT_CREATE_ANDX parameters', message.raw_data, message)
+                raise ProtocolError('Not enough data to decode SMB_COM_NT_CREATE_ANDX parameters', message.raw_data,
+                                    message)
 
-            _, _, _, self.oplock_level, self.fid = struct.unpack(self.PAYLOAD_STRUCT_FORMAT, message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
+            _, _, _, self.oplock_level, self.fid = struct.unpack(self.PAYLOAD_STRUCT_FORMAT,
+                                                                 message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
 
 
 class ComTransactionRequest(Payload):
@@ -688,9 +719,9 @@ class ComTransactionRequest(Payload):
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
     def __init__(self, max_params_count, max_data_count, max_setup_count,
-                 total_params_count = 0, total_data_count = 0,
-                 params_bytes = b'', data_bytes = b'', setup_bytes = b'',
-                 flags = 0, timeout = 0, name = "\\PIPE\\"):
+                 total_params_count=0, total_data_count=0,
+                 params_bytes=b'', data_bytes=b'', setup_bytes=b'',
+                 flags=0, timeout=0, name="\\PIPE\\"):
         self.total_params_count = total_params_count or len(params_bytes)
         self.total_data_count = total_data_count or len(data_bytes)
         self.max_params_count = max_params_count
@@ -715,7 +746,7 @@ class ComTransactionRequest(Payload):
         data_bytes_len = len(self.data_bytes)
 
         padding0 = b''
-        offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_bytes_len + 2 # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
+        offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_bytes_len + 2  # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
         if offset % 2 != 0:
             padding0 = b'\0'
             offset += 1
@@ -723,8 +754,8 @@ class ComTransactionRequest(Payload):
         offset += name_len  # For the name field
         padding1 = b''
         if offset % 4 != 0:
-            padding1 = b'\0'*(4-offset%4)
-            offset += (4-offset%4)
+            padding1 = b'\0' * (4 - offset % 4)
+            offset += (4 - offset % 4)
 
         if params_bytes_len > 0:
             params_bytes_offset = offset
@@ -734,8 +765,8 @@ class ComTransactionRequest(Payload):
 
         padding2 = b''
         if offset % 4 != 0:
-            padding2 = b'\0'*(4-offset%4)
-            offset += (4-offset%4)
+            padding2 = b'\0' * (4 - offset % 4)
+            offset += (4 - offset % 4)
 
         if data_bytes_len > 0:
             data_bytes_offset = offset
@@ -749,10 +780,10 @@ class ComTransactionRequest(Payload):
                         self.max_params_count,
                         self.max_data_count,
                         self.max_setup_count,
-                        0x00,           # Reserved1. Must be 0x00
+                        0x00,  # Reserved1. Must be 0x00
                         self.flags,
                         self.timeout,
-                        0x0000,         # Reserved2. Must be 0x0000
+                        0x0000,  # Reserved2. Must be 0x0000
                         params_bytes_len,
                         params_bytes_offset,
                         data_bytes_len,
@@ -787,7 +818,8 @@ class ComTransactionResponse(Payload):
 
         if not message.status.hasError:
             if len(message.parameters_data) < self.PAYLOAD_STRUCT_SIZE:
-                raise ProtocolError('Not enough data to decode SMB_COM_TRANSACTION parameters', message.raw_data, message)
+                raise ProtocolError('Not enough data to decode SMB_COM_TRANSACTION parameters', message.raw_data,
+                                    message)
 
             self.total_params_count, self.total_data_count, _, \
             params_bytes_len, params_bytes_offset, params_bytes_displ, \
@@ -798,21 +830,24 @@ class ComTransactionResponse(Payload):
                 setup_bytes_len = setup_count * 2
 
                 if len(message.parameters_data) < self.PAYLOAD_STRUCT_SIZE + setup_bytes_len:
-                    raise ProtocolError('Not enough data to decode SMB_COM_TRANSACTION parameters', message.raw_data, message)
+                    raise ProtocolError('Not enough data to decode SMB_COM_TRANSACTION parameters', message.raw_data,
+                                        message)
 
-                self.setup_bytes = message.parameters_data[self.PAYLOAD_STRUCT_SIZE:self.PAYLOAD_STRUCT_SIZE+setup_bytes_len]
+                self.setup_bytes = message.parameters_data[
+                                   self.PAYLOAD_STRUCT_SIZE:self.PAYLOAD_STRUCT_SIZE + setup_bytes_len]
             else:
                 self.setup_bytes = ''
 
-            offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_count * 2 + 2 # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
+            offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_count * 2 + 2  # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
 
             if params_bytes_len > 0:
-                self.params_bytes = message.data[params_bytes_offset-offset:params_bytes_offset-offset+params_bytes_len]
+                self.params_bytes = message.data[
+                                    params_bytes_offset - offset:params_bytes_offset - offset + params_bytes_len]
             else:
                 self.params_bytes = ''
 
             if data_bytes_len > 0:
-                self.data_bytes = message.data[data_bytes_offset-offset:data_bytes_offset-offset+data_bytes_len]
+                self.data_bytes = message.data[data_bytes_offset - offset:data_bytes_offset - offset + data_bytes_len]
             else:
                 self.data_bytes = ''
 
@@ -828,9 +863,9 @@ class ComTransaction2Request(Payload):
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
     def __init__(self, max_params_count, max_data_count, max_setup_count,
-                 total_params_count = 0, total_data_count = 0,
-                 params_bytes = b'', data_bytes = b'', setup_bytes = b'',
-                 flags = 0, timeout = 0):
+                 total_params_count=0, total_data_count=0,
+                 params_bytes=b'', data_bytes=b'', setup_bytes=b'',
+                 flags=0, timeout=0):
         self.total_params_count = total_params_count or len(params_bytes)
         self.total_data_count = total_data_count or len(data_bytes)
         self.max_params_count = max_params_count
@@ -853,7 +888,7 @@ class ComTransaction2Request(Payload):
         name = b'\0\0'
 
         padding0 = b''
-        offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_bytes_len + 2 # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
+        offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_bytes_len + 2  # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
         if offset % 2 != 0:
             padding0 = b'\0'
             offset += 1
@@ -861,7 +896,7 @@ class ComTransaction2Request(Payload):
         offset += 2  # For the name field
         padding1 = b''
         if offset % 4 != 0:
-            padding1 = b'\0'*(4-offset%4)
+            padding1 = b'\0' * (4 - offset % 4)
 
         if params_bytes_len > 0:
             params_bytes_offset = offset
@@ -871,7 +906,7 @@ class ComTransaction2Request(Payload):
 
         padding2 = b''
         if offset % 4 != 0:
-            padding2 = b'\0'*(4-offset%4)
+            padding2 = b'\0' * (4 - offset % 4)
 
         if data_bytes_len > 0:
             data_bytes_offset = offset
@@ -885,10 +920,10 @@ class ComTransaction2Request(Payload):
                         self.max_params_count,
                         self.max_data_count,
                         self.max_setup_count,
-                        0x00,           # Reserved1. Must be 0x00
+                        0x00,  # Reserved1. Must be 0x00
                         self.flags,
                         self.timeout,
-                        0x0000,         # Reserved2. Must be 0x0000
+                        0x0000,  # Reserved2. Must be 0x0000
                         params_bytes_len,
                         params_bytes_offset,
                         data_bytes_len,
@@ -923,32 +958,37 @@ class ComTransaction2Response(Payload):
 
         if not message.status.hasError:
             if len(message.parameters_data) < self.PAYLOAD_STRUCT_SIZE:
-                raise ProtocolError('Not enough data to decode SMB_COM_TRANSACTION2 parameters', message.raw_data, message)
+                raise ProtocolError('Not enough data to decode SMB_COM_TRANSACTION2 parameters', message.raw_data,
+                                    message)
 
             self.total_params_count, self.total_data_count, _, \
             params_bytes_len, params_bytes_offset, params_bytes_displ, \
             data_bytes_len, data_bytes_offset, data_bytes_displ, \
-            setup_count, _ = struct.unpack(self.PAYLOAD_STRUCT_FORMAT, message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
+            setup_count, _ = struct.unpack(self.PAYLOAD_STRUCT_FORMAT,
+                                           message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
 
             if setup_count > 0:
                 setup_bytes_len = setup_count * 2
 
                 if len(message.parameters_data) < self.PAYLOAD_STRUCT_SIZE + setup_bytes_len:
-                    raise ProtocolError('Not enough data to decode SMB_COM_TRANSACTION parameters', message.raw_data, message)
+                    raise ProtocolError('Not enough data to decode SMB_COM_TRANSACTION parameters', message.raw_data,
+                                        message)
 
-                self.setup_bytes = message.parameters_data[self.PAYLOAD_STRUCT_SIZE:self.PAYLOAD_STRUCT_SIZE+setup_bytes_len]
+                self.setup_bytes = message.parameters_data[
+                                   self.PAYLOAD_STRUCT_SIZE:self.PAYLOAD_STRUCT_SIZE + setup_bytes_len]
             else:
                 self.setup_bytes = ''
 
-            offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_count * 2 + 2 # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
+            offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_count * 2 + 2  # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
 
             if params_bytes_len > 0:
-                self.params_bytes = message.data[params_bytes_offset-offset:params_bytes_offset-offset+params_bytes_len]
+                self.params_bytes = message.data[
+                                    params_bytes_offset - offset:params_bytes_offset - offset + params_bytes_len]
             else:
                 self.params_bytes = ''
 
             if data_bytes_len > 0:
-                self.data_bytes = message.data[data_bytes_offset-offset:data_bytes_offset-offset+data_bytes_len]
+                self.data_bytes = message.data[data_bytes_offset - offset:data_bytes_offset - offset + data_bytes_len]
             else:
                 self.data_bytes = ''
 
@@ -963,7 +1003,7 @@ class ComCloseRequest(Payload):
     PAYLOAD_STRUCT_FORMAT = '<HI'
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
-    def __init__(self, fid, last_modified_time = 0xFFFFFFFF):
+    def __init__(self, fid, last_modified_time=0xFFFFFFFF):
         self.fid = fid
         self.last_modified_time = last_modified_time
 
@@ -986,7 +1026,8 @@ class ComOpenAndxRequest(Payload):
     PAYLOAD_STRUCT_FORMAT = '<HHHHIHIII'
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
-    def __init__(self, filename, access_mode, open_mode, flags = 0x0000, search_attributes = 0, file_attributes = 0, create_time = 0, timeout = 0):
+    def __init__(self, filename, access_mode, open_mode, flags=0x0000, search_attributes=0, file_attributes=0,
+                 create_time=0, timeout=0):
         """
         @param create_time: Epoch time value to indicate the time of creation for this file. If zero, we will automatically assign the current time
         @type create_time: int
@@ -1052,8 +1093,9 @@ class ComOpenAndxResponse(Payload):
                 raise ProtocolError('Not enough data to decode SMB_COM_OPEN_ANDX parameters', message.raw_data, message)
 
             _, _, _, self.fid, self.file_attributes, self.last_write_time, _, \
-            self.access_rights, self.resource_type, _, self.open_results, _, _, _ = struct.unpack(self.PAYLOAD_STRUCT_FORMAT,
-                                                                                                  message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
+            self.access_rights, self.resource_type, _, self.open_results, _, _, _ = struct.unpack(
+                self.PAYLOAD_STRUCT_FORMAT,
+                message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
 
 
 class ComWriteAndxRequest(Payload):
@@ -1067,7 +1109,7 @@ class ComWriteAndxRequest(Payload):
     PAYLOAD_STRUCT_FORMAT = '<HIIHHHHHI'
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
-    def __init__(self, fid, data_bytes, offset, write_mode = 0, timeout = 0):
+    def __init__(self, fid, data_bytes, offset, write_mode=0, timeout=0):
         """
         @param timeout: Number of milliseconds to wait for blocked write request before failing. Must be zero for writing to regular file
         @type timeout: int
@@ -1095,11 +1137,11 @@ class ComWriteAndxRequest(Payload):
                         self.offset & 0xFFFFFFFF,
                         self.timeout,
                         self.write_mode,
-                        data_len,   # Remaining
-                        0x0000,     # Reserved
+                        data_len,  # Remaining
+                        0x0000,  # Reserved
                         len(self.data_bytes),  # DataLength
-                        data_offset,           # DataOffset
-                        self.offset >> 32)     # OffsetHigh field defined in [MS-SMB]: 2.2.4.3.1
+                        data_offset,  # DataOffset
+                        self.offset >> 32)  # OffsetHigh field defined in [MS-SMB]: 2.2.4.3.1
 
         message.data = b'\0' + self.data_bytes
 
@@ -1120,9 +1162,12 @@ class ComWriteAndxResponse(Payload):
 
         if not message.status.hasError:
             if len(message.parameters_data) < self.PAYLOAD_STRUCT_SIZE:
-                raise ProtocolError('Not enough data to decode SMB_COM_WRITE_ANDX parameters', message.raw_data, message)
+                raise ProtocolError('Not enough data to decode SMB_COM_WRITE_ANDX parameters', message.raw_data,
+                                    message)
 
-            _, _, _, count, self.available, high_count, _ = struct.unpack(self.PAYLOAD_STRUCT_FORMAT, message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
+            _, _, _, count, self.available, high_count, _ = struct.unpack(self.PAYLOAD_STRUCT_FORMAT,
+                                                                          message.parameters_data[
+                                                                          :self.PAYLOAD_STRUCT_SIZE])
             self.count = (count & 0xFFFF) | (high_count << 16)
 
 
@@ -1137,7 +1182,7 @@ class ComReadAndxRequest(Payload):
     PAYLOAD_STRUCT_FORMAT = '<HIHHIHI'
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
-    def __init__(self, fid, offset, max_return_bytes_count, min_return_bytes_count, timeout = 0, remaining = 0):
+    def __init__(self, fid, offset, max_return_bytes_count, min_return_bytes_count, timeout=0, remaining=0):
         """
         @param timeout: If reading from a regular file, this parameter must be 0.
         @type timeout: int
@@ -1161,8 +1206,9 @@ class ComReadAndxRequest(Payload):
                         self.offset & 0xFFFFFFFF,
                         self.max_return_bytes_count,
                         self.min_return_bytes_count,
-                        self.timeout or (self.max_return_bytes_count >> 32),  # Note that in [MS-SMB]: 2.2.4.2.1, this field can also act as MaxCountHigh field
-                        self.remaining, # In [MS-CIFS]: 2.2.4.42.1, this field must be set to 0x0000
+                        self.timeout or (self.max_return_bytes_count >> 32),
+                        # Note that in [MS-SMB]: 2.2.4.2.1, this field can also act as MaxCountHigh field
+                        self.remaining,  # In [MS-CIFS]: 2.2.4.42.1, this field must be set to 0x0000
                         self.offset >> 32)
 
         message.data = b''
@@ -1187,10 +1233,11 @@ class ComReadAndxResponse(Payload):
                 raise ProtocolError('Not enough data to decode SMB_COM_READ_ANDX parameters', message.raw_data, message)
 
             _, _, _, _, _, _, self.data_length, data_offset, _, _, _, _, _ = struct.unpack(self.PAYLOAD_STRUCT_FORMAT,
-                                                                                           message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
+                                                                                           message.parameters_data[
+                                                                                           :self.PAYLOAD_STRUCT_SIZE])
 
             offset = data_offset - message.HEADER_STRUCT_SIZE - self.PAYLOAD_STRUCT_SIZE - 2  # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
-            self.data = message.data[offset:offset+self.data_length]
+            self.data = message.data[offset:offset + self.data_length]
             assert len(self.data) == self.data_length
 
 
@@ -1201,7 +1248,7 @@ class ComDeleteRequest(Payload):
     - [MS-CIFS]: 2.2.4.7.1
     """
 
-    def __init__(self, filename_pattern, search_attributes = 0):
+    def __init__(self, filename_pattern, search_attributes=0):
         self.filename_pattern = filename_pattern
         self.search_attributes = search_attributes
 
@@ -1262,7 +1309,7 @@ class ComRenameRequest(Payload):
     - [MS-CIFS]: 2.2.4.8.1
     """
 
-    def __init__(self, old_path, new_path, search_attributes = 0):
+    def __init__(self, old_path, new_path, search_attributes=0):
         self.old_path = old_path
         self.new_path = new_path
         self.search_attributes = search_attributes
@@ -1273,7 +1320,8 @@ class ComRenameRequest(Payload):
 
     def prepare(self, message):
         message.parameters_data = struct.pack('<H', self.search_attributes)
-        message.data = b'\x04' + self.old_path.encode('UTF-16LE') + b'\x00\x00\x04\x00' + self.new_path.encode('UTF-16LE') + b'\x00\x00'
+        message.data = b'\x04' + self.old_path.encode('UTF-16LE') + b'\x00\x00\x04\x00' + self.new_path.encode(
+            'UTF-16LE') + b'\x00\x00'
 
 
 class ComEchoRequest(Payload):
@@ -1283,7 +1331,7 @@ class ComEchoRequest(Payload):
     - [MS-CIFS]: 2.2.4.39.1
     """
 
-    def __init__(self, echo_data = b'', echo_count = 1):
+    def __init__(self, echo_data=b'', echo_count=1):
         self.echo_count = echo_count
         self.echo_data = echo_data
 
@@ -1319,8 +1367,8 @@ class ComNTTransactRequest(Payload):
     PAYLOAD_STRUCT_SIZE = struct.calcsize(PAYLOAD_STRUCT_FORMAT)
 
     def __init__(self, function, max_params_count, max_data_count, max_setup_count,
-                 total_params_count = 0, total_data_count = 0,
-                 params_bytes = b'', setup_bytes = b'', data_bytes = b''):
+                 total_params_count=0, total_data_count=0,
+                 params_bytes=b'', setup_bytes=b'', data_bytes=b''):
         self.function = function
         self.total_params_count = total_params_count or len(params_bytes)
         self.total_data_count = total_data_count or len(data_bytes)
@@ -1341,10 +1389,10 @@ class ComNTTransactRequest(Payload):
         data_bytes_len = len(self.data_bytes)
 
         padding0 = b''
-        offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_bytes_len + 2 # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
+        offset = message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_bytes_len + 2  # constant 2 is for the ByteCount field in the SMB header (i.e. field which indicates number of data bytes after the SMB parameters)
         if offset % 4 != 0:
-            padding0 = b'\0'*(4-offset%4)
-            offset += (4-offset%4)
+            padding0 = b'\0' * (4 - offset % 4)
+            offset += (4 - offset % 4)
 
         if params_bytes_len > 0:
             params_bytes_offset = offset
@@ -1354,8 +1402,8 @@ class ComNTTransactRequest(Payload):
         offset += params_bytes_len
         padding1 = b''
         if offset % 4 != 0:
-            padding1 = b'\0'*(4-offset%4)
-            offset += (4-offset%4)
+            padding1 = b'\0' * (4 - offset % 4)
+            offset += (4 - offset % 4)
 
         if data_bytes_len > 0:
             data_bytes_offset = offset
@@ -1365,7 +1413,7 @@ class ComNTTransactRequest(Payload):
         message.parameters_data = \
             struct.pack(self.PAYLOAD_STRUCT_FORMAT,
                         self.max_setup_count,
-                        0x00,           # Reserved1. Must be 0x00
+                        0x00,  # Reserved1. Must be 0x00
                         self.total_params_count,
                         self.total_data_count,
                         self.max_params_count,
@@ -1406,18 +1454,20 @@ class ComNTTransactResponse(Payload):
             _, self.total_params_count, self.total_data_count, \
             params_count, params_offset, params_displ, \
             data_count, data_offset, data_displ, setup_count = struct.unpack(self.PAYLOAD_STRUCT_FORMAT,
-                                                                             message.parameters_data[:self.PAYLOAD_STRUCT_SIZE])
+                                                                             message.parameters_data[
+                                                                             :self.PAYLOAD_STRUCT_SIZE])
 
-            self.setup_bytes = message.parameters_data[self.PAYLOAD_STRUCT_SIZE:self.PAYLOAD_STRUCT_SIZE+setup_count*2]
+            self.setup_bytes = message.parameters_data[
+                               self.PAYLOAD_STRUCT_SIZE:self.PAYLOAD_STRUCT_SIZE + setup_count * 2]
 
             if params_count > 0:
-                params_offset -= message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_count*2 + 2
-                self.params_bytes = message.data[params_offset:params_offset+params_count]
+                params_offset -= message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_count * 2 + 2
+                self.params_bytes = message.data[params_offset:params_offset + params_count]
             else:
                 self.params_bytes = b''
 
             if data_count > 0:
-                data_offset -= message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_count*2 + 2
-                self.data_bytes = message.data[data_offset:data_offset+data_count]
+                data_offset -= message.HEADER_STRUCT_SIZE + self.PAYLOAD_STRUCT_SIZE + setup_count * 2 + 2
+                self.data_bytes = message.data[data_offset:data_offset + data_count]
             else:
                 self.data_bytes = b''

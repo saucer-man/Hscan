@@ -1,8 +1,10 @@
-from libs.core.data import paths
 import os
-from libs.core.data import logger
-from urllib.parse import urlparse
 import socket
+from urllib.parse import urlparse
+
+from libs.core.data import logger
+from libs.core.data import paths
+
 
 def banner():
     return """
@@ -14,6 +16,7 @@ def banner():
                  ||----w |
                  ||     ||
                  """
+
 
 # set paths of project
 def set_paths(module_path):

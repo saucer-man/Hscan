@@ -1,16 +1,23 @@
-
-import os, sys, socket, urllib.request, urllib.error, urllib.parse, mimetypes, email, tempfile
-from urllib.parse import (unwrap, unquote, splittype, splithost, quote,
-     splitport, splittag, splitattr, splituser, splitpasswd, splitvalue)
+import email
+import mimetypes
+import os
+import socket
+import sys
+import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
+from io import BytesIO
+from urllib.parse import (unquote, splitport, splitattr, splituser, splitpasswd)
 from urllib.response import addinfourl
-from urllib.request import ftpwrapper
-from .nmb.NetBIOS import NetBIOS
+
 from smb.SMBConnection import SMBConnection
 
-from io import BytesIO
+from .nmb.NetBIOS import NetBIOS
 
 USE_NTLM = True
 MACHINE_NAME = None
+
 
 class SMBHandler(urllib.request.BaseHandler):
 
@@ -56,7 +63,7 @@ class SMBHandler(urllib.request.BaseHandler):
         service, path = dirs[0], '/'.join(dirs[1:])
 
         try:
-            conn = SMBConnection(user, passwd, myname, server_name, domain=domain, use_ntlm_v2 = USE_NTLM)
+            conn = SMBConnection(user, passwd, myname, server_name, domain=domain, use_ntlm_v2=USE_NTLM)
             conn.connect(host, port)
 
             headers = email.message.Message()

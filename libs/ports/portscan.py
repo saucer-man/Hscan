@@ -1,8 +1,11 @@
-import socket
-from libs.core.data import conf, logger
-import gevent
 import queue
+import socket
 import sys
+
+import gevent
+
+from libs.core.data import conf, logger
+
 
 def scan():
     while not conf.port_scan_task.empty():
@@ -12,7 +15,8 @@ def scan():
         host = port_task["host"]
         port = port_task["port"]
         logger.debug(f"port scan {host}:{port} ...")
-        sys.stdout.write("(" + str(conf.port_scan_task_num - conf.port_scan_task.qsize()) + "/" + str(conf.port_scan_task_num) + ")\r")
+        sys.stdout.write("(" + str(conf.port_scan_task_num - conf.port_scan_task.qsize()) + "/" + str(
+            conf.port_scan_task_num) + ")\r")
         sys.stdout.flush()
         try:
             s.connect((host, int(port)))
@@ -32,7 +36,7 @@ def generate_portscan_task():
 
 
 def portscan():
-    conf.target_port_dict = {}   # 这是个字典，键为host，值为host中开放的端口列表
+    conf.target_port_dict = {}  # 这是个字典，键为host，值为host中开放的端口列表
     for host in conf.target:
         conf.target_port_dict[host] = []
 
@@ -53,6 +57,5 @@ def portscan():
     with open(conf.output_path, "a", encoding='utf-8') as f:
         f.write("2. open port\n")
         for host, port in conf.target_port_dict.items():
-            f.write(host + ': ' + str(port)+'\n')
+            f.write(host + ': ' + str(port) + '\n')
         f.write('\n\n')
-

@@ -1,4 +1,7 @@
+import json
+
 import requests
+
 
 # refer https://xz.aliyun.com/t/2233
 # https://github.com/rabbitmask/SB-Actuator/blob/master/SB-Actuator.py
@@ -12,20 +15,22 @@ def poc(host, port, timeout):
                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8", }
     pathlist = ['autoconfig', 'beans', 'env', 'configprops', 'dump', 'health', 'info', 'mappings', 'metrics',
                 'shutdown', 'trace', ]
-
+    return_list = []
     for path in pathlist:
         # Spring Boot 1.x版本端点在根URL下注册。
         try:
             r = requests.get(f"http://{host}:{port}/{path}", headers=headers, timeout=timeout, verify=False)
             if r.status_code == 200:
-                return f"springBoot actuator is unauthorized: http://{host}:{port}/{path}"
+                json.loads(r.text)
+                return_list.append(f"springBoot actuator is unauthorized: http://{host}:{port}/{path}")
         except:
             pass
         # Spring Boot 2.x版本端点移动到/actuator/路径。
         try:
             r = requests.get(f"http://{host}:{port}/actuator/{path}", headers=headers, timeout=timeout, verify=False)
             if r.status_code == 200:
-                return f"springBoot actuator is unauthorized: http://{host}:{port}/actuator/{path}"
+                json.loads(r.text)
+                return_list.append(f"springBoot actuator is unauthorized: http://{host}:{port}/actuator/{path}")
         except:
             pass
     # 大多数Actuator仅支持GET请求并仅显示敏感的配置数据,如果使用了Jolokia端点，可能会产生XXE、甚至是RCE安全问题。
@@ -33,9 +38,10 @@ def poc(host, port, timeout):
     try:
         r = requests.get(f"http://{host}:{port}/jolokia/list", headers=headers, timeout=timeout, verify=False)
         if r.status_code == 200:
+            json.loads(r.text)
             if 'reloadByURL' in r.text:
-                return "spring jolokia 端点未授权，可进行XXE/RCE测试"
-            return "spring jolokia 端点未授权"
+                return_list.append("spring jolokia 端点未授权，可进行XXE/RCE测试")
+            return_list.append("spring jolokia 端点未授权")
     except:
         pass
-    return None
+    return return_list

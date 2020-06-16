@@ -1,5 +1,5 @@
-import socket
 import binascii
+import socket
 
 
 def poc(host, port, timeout):

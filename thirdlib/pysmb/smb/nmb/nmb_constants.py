@@ -1,4 +1,3 @@
-
 # Default port for NetBIOS name service
 NETBIOS_NS_PORT = 137
 
@@ -20,14 +19,14 @@ TYPE_DOMAIN_MASTER = 0x1B
 TYPE_MASTER_BROWSER = 0x1D
 TYPE_BROWSER = 0x1E
 
-TYPE_NAMES = { TYPE_UNKNOWN: 'Unknown',
-               TYPE_WORKSTATION: 'Workstation',
-               TYPE_CLIENT: 'Client',
-               TYPE_SERVER: 'Server',
-               TYPE_MASTER_BROWSER: 'Master Browser',
-               TYPE_BROWSER: 'Browser Server',
-               TYPE_DOMAIN_MASTER: 'Domain Master'
-               }
+TYPE_NAMES = {TYPE_UNKNOWN: 'Unknown',
+              TYPE_WORKSTATION: 'Workstation',
+              TYPE_CLIENT: 'Client',
+              TYPE_SERVER: 'Server',
+              TYPE_MASTER_BROWSER: 'Master Browser',
+              TYPE_BROWSER: 'Browser Server',
+              TYPE_DOMAIN_MASTER: 'Domain Master'
+              }
 
 # Values for Session Packet Type field in Session Packets
 SESSION_MESSAGE = 0x00

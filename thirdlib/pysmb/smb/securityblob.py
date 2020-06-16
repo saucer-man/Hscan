@@ -1,11 +1,13 @@
-
-from pyasn1.type import tag, univ, namedtype, namedval, constraint
 from pyasn1.codec.der import encoder, decoder
+from pyasn1.type import tag, univ, namedtype, namedval, constraint
 
-__all__ = [ 'generateNegotiateSecurityBlob', 'generateAuthSecurityBlob', 'decodeChallengeSecurityBlob', 'decodeAuthResponseSecurityBlob' ]
+__all__ = ['generateNegotiateSecurityBlob', 'generateAuthSecurityBlob', 'decodeChallengeSecurityBlob',
+           'decodeAuthResponseSecurityBlob']
 
 
 class UnsupportedSecurityProvider(Exception): pass
+
+
 class BadSecurityBlobError(Exception): pass
 
 
@@ -29,7 +31,8 @@ def generateNegotiateSecurityBlob(ntlm_data):
 
 
 def generateAuthSecurityBlob(ntlm_data):
-    response_token = univ.OctetString(ntlm_data).subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2))
+    response_token = univ.OctetString(ntlm_data).subtype(
+        explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2))
 
     n = NegTokenTarg().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1))
     n.setComponentByName('responseToken', response_token)
@@ -42,7 +45,7 @@ def generateAuthSecurityBlob(ntlm_data):
 
 def decodeChallengeSecurityBlob(data):
     try:
-        d, _ = decoder.decode(data, asn1Spec = NegotiationToken())
+        d, _ = decoder.decode(data, asn1Spec=NegotiationToken())
         nt = d.getComponentByName('negTokenTarg')
 
         token = nt.getComponentByName('responseToken')
@@ -61,7 +64,7 @@ def decodeChallengeSecurityBlob(data):
 
 def decodeAuthResponseSecurityBlob(data):
     try:
-        d, _ = decoder.decode(data, asn1Spec = NegotiationToken())
+        d, _ = decoder.decode(data, asn1Spec=NegotiationToken())
         nt = d.getComponentByName('negTokenTarg')
 
         result = nt.getComponentByName('negResult')
@@ -78,11 +81,12 @@ RESULT_ACCEPT_COMPLETED = 0
 RESULT_ACCEPT_INCOMPLETE = 1
 RESULT_REJECT = 2
 
+
 class NegResultEnumerated(univ.Enumerated):
     namedValues = namedval.NamedValues(
-        ( 'accept_completed', 0 ),
-        ( 'accept_incomplete', 1 ),
-        ( 'reject', 2 )
+        ('accept_completed', 0),
+        ('accept_incomplete', 1),
+        ('reject', 2)
     )
     subtypeSpec = univ.Enumerated.subtypeSpec + constraint.SingleValueConstraint(0, 1, 2)
 
@@ -93,38 +97,48 @@ class MechTypeList(univ.SequenceOf):
 
 class ContextFlags(univ.BitString):
     namedValues = namedval.NamedValues(
-        ( 'delegFlag', 0 ),
-        ( 'mutualFlag', 1 ),
-        ( 'replayFlag', 2 ),
-        ( 'sequenceFlag', 3 ),
-        ( 'anonFlag', 4 ),
-        ( 'confFlag', 5 ),
-        ( 'integFlag', 6 )
+        ('delegFlag', 0),
+        ('mutualFlag', 1),
+        ('replayFlag', 2),
+        ('sequenceFlag', 3),
+        ('anonFlag', 4),
+        ('confFlag', 5),
+        ('integFlag', 6)
     )
 
 
 class NegTokenInit(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.OptionalNamedType('mechTypes', MechTypeList().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
-        namedtype.OptionalNamedType('reqFlags', ContextFlags().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1))),
-        namedtype.OptionalNamedType('mechToken', univ.OctetString().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 2))),
-        namedtype.OptionalNamedType('mechListMIC', univ.OctetString().subtype(implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 3)))
+        namedtype.OptionalNamedType('mechTypes', MechTypeList().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
+        namedtype.OptionalNamedType('reqFlags', ContextFlags().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1))),
+        namedtype.OptionalNamedType('mechToken', univ.OctetString().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 2))),
+        namedtype.OptionalNamedType('mechListMIC', univ.OctetString().subtype(
+            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 3)))
     )
 
 
 class NegTokenTarg(univ.Sequence):
     componentType = namedtype.NamedTypes(
-        namedtype.OptionalNamedType('negResult', NegResultEnumerated().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
-        namedtype.OptionalNamedType('supportedMech', univ.ObjectIdentifier().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1))),
-        namedtype.OptionalNamedType('responseToken', univ.OctetString().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 2))),
-        namedtype.OptionalNamedType('mechListMIC', univ.OctetString().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 3)))
+        namedtype.OptionalNamedType('negResult', NegResultEnumerated().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
+        namedtype.OptionalNamedType('supportedMech', univ.ObjectIdentifier().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1))),
+        namedtype.OptionalNamedType('responseToken', univ.OctetString().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 2))),
+        namedtype.OptionalNamedType('mechListMIC', univ.OctetString().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 3)))
     )
 
 
 class NegotiationToken(univ.Choice):
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('negTokenInit', NegTokenInit().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
-        namedtype.NamedType('negTokenTarg', NegTokenTarg().subtype(explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1)))
+        namedtype.NamedType('negTokenInit', NegTokenInit().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))),
+        namedtype.NamedType('negTokenTarg', NegTokenTarg().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 1)))
     )
 
 

@@ -5,7 +5,6 @@ used in them, as specified in [MS-DTYP].
 
 import struct
 
-
 # Security descriptor control flags
 # [MS-DTYP]: 2.4.6
 SECURITY_DESCRIPTOR_OWNER_DEFAULTED = 0x0001
@@ -152,6 +151,7 @@ class SID(object):
 
     See [MS-DTYP]: 2.4.2
     """
+
     def __init__(self, revision, identifier_authority, subauthorities):
         #: Revision, should always be 1.
         self.revision = revision
@@ -164,7 +164,7 @@ class SID(object):
         """
         String representation, as specified in [MS-DTYP]: 2.4.2.1
         """
-        if self.identifier_authority >= 2**32:
+        if self.identifier_authority >= 2 ** 32:
             id_auth = '%#x' % (self.identifier_authority,)
         else:
             id_auth = self.identifier_authority
@@ -179,11 +179,11 @@ class SID(object):
         revision, subauth_count = struct.unpack('<BB', data[:2])
         identifier_authority = struct.unpack('>Q', b'\x00\x00' + data[2:8])[0]
         subauth_data = data[8:]
-        subauthorities = [struct.unpack('<L', subauth_data[4 * i : 4 * (i+1)])[0]
+        subauthorities = [struct.unpack('<L', subauth_data[4 * i: 4 * (i + 1)])[0]
                           for i in range(subauth_count)]
         sid = cls(revision, identifier_authority, subauthorities)
         if return_tail:
-            return sid, subauth_data[4 * subauth_count :]
+            return sid, subauth_data[4 * subauth_count:]
         return sid
 
 

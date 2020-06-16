@@ -1,6 +1,5 @@
-import socket
 import binascii
-import traceback
+import socket
 
 
 def poc(host, port, timeout):
@@ -12,7 +11,7 @@ def poc(host, port, timeout):
         s.connect((host, int(port)))
         s.send(payload)
         recv_data = s.recv(1024)
-        if b"databases"in recv_data:
+        if b"databases" in recv_data:
             return f"mongodb is unauthorized"
         if b"Unauthorized" in recv_data:
             return f"mongodb service(authorized)"

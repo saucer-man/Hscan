@@ -1,5 +1,6 @@
 import requests
 
+
 def poc(host, port, timeout):
     druid_path = [f"http://{host}:{port}/druid/index.html", f"http://{host}:{port}/system/index.html",
                   f"http://{host}:{port}/webpage/system/druid/index.html"]

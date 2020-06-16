@@ -1,18 +1,23 @@
+import logging
+import random
+import socket
+import time
 
-import os, logging, random, socket, time
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import DatagramProtocol
+
 from .base import NBNS
+
 
 class NetBIOSTimeout(Exception):
     """Raised in NBNSProtocol via Deferred.errback method when queryName method has timeout waiting for reply"""
     pass
 
-class NBNSProtocol(DatagramProtocol, NBNS):
 
+class NBNSProtocol(DatagramProtocol, NBNS):
     log = logging.getLogger('NMB.NBNSProtocol')
 
-    def __init__(self, broadcast = True, listen_port = 0):
+    def __init__(self, broadcast=True, listen_port=0):
         """
         Instantiate a NBNSProtocol instance.
 
@@ -22,7 +27,7 @@ class NBNSProtocol(DatagramProtocol, NBNS):
         :param integer listen_port: Specifies the UDP port number to bind to for listening. If zero, OS will automatically select a free port number.
         """
         self.broadcast = broadcast
-        self.pending_trns = { }  # TRN ID -> ( expiry_time, name, Deferred instance )
+        self.pending_trns = {}  # TRN ID -> ( expiry_time, name, Deferred instance )
         self.transport = reactor.listenUDP(listen_port, self)
         if self.broadcast:
             self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -42,9 +47,9 @@ class NBNSProtocol(DatagramProtocol, NBNS):
 
     def write(self, data, ip, port):
         # We don't use the transport.write method directly as it keeps raising DeprecationWarning for ip='<broadcast>'
-        self.transport.getHandle().sendto(data, ( ip, port ))
+        self.transport.getHandle().sendto(data, (ip, port))
 
-    def queryName(self, name, ip = '', port = 137, timeout = 30):
+    def queryName(self, name, ip='', port=137, timeout=30):
         """
         Send a query on the network and hopes that if machine matching the *name* will reply with its IP address.
 
@@ -71,10 +76,10 @@ class NBNSProtocol(DatagramProtocol, NBNS):
         self.write(data, ip, port)
 
         d = defer.Deferred()
-        self.pending_trns[trn_id] = ( time.time()+timeout, name, d )
+        self.pending_trns[trn_id] = (time.time() + timeout, name, d)
         return d
 
-    def queryIPForName(self, ip, port = 137, timeout = 30):
+    def queryIPForName(self, ip, port=137, timeout=30):
         """
         Send a query to the machine with *ip* and hopes that the machine will reply back with its name.
 
@@ -102,11 +107,11 @@ class NBNSProtocol(DatagramProtocol, NBNS):
         d2.addErrback(d.errback)
 
         def stripCode(ret):
-            if ret is not None: # got valid response. Somehow the callback is also called when there is an error.
+            if ret is not None:  # got valid response. Somehow the callback is also called when there is an error.
                 d.callback(map(lambda s: s[0], filter(lambda s: s[1] == TYPE_SERVER, ret)))
 
         d2.addCallback(stripCode)
-        self.pending_trns[trn_id] = ( time.time()+timeout, NAME_QUERY, d2 )
+        self.pending_trns[trn_id] = (time.time() + timeout, NAME_QUERY, d2)
         return d
 
     def stopProtocol(self):
@@ -126,7 +131,8 @@ class NBNSProtocol(DatagramProtocol, NBNS):
             del self.pending_trns[trn_id]
             try:
                 d.errback(NetBIOSTimeout(name))
-            except: pass
+            except:
+                pass
 
         map(expire_item, expired)
 

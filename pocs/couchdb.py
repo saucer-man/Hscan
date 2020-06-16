@@ -1,7 +1,6 @@
 import requests
 
 
-
 def poc(host, port, timeout):
     try:
         url = f"http://{host}:{port}"

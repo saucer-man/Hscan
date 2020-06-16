@@ -5,12 +5,13 @@ Copyright (c) 2006-2020 sqlmap developers (http://sqlmap.org/)
 See the file 'LICENSE' for copying permission
 """
 
-
 import logging
-from thirdlib.colorama import init, Fore, Style
 import sys
 
+from thirdlib.colorama import init, Fore, Style
+
 init(autoreset=True)
+
 
 class LOGGER(object):
     def __init__(self, logger):

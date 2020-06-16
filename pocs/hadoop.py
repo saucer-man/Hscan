@@ -1,5 +1,6 @@
 import requests
 
+
 def poc(host, port, timeout):
     try:
         # hadoop_YARN
@@ -17,5 +18,3 @@ def poc(host, port, timeout):
         # print(host)
         pass
     return None
-
-

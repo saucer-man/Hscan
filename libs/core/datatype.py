@@ -1,6 +1,6 @@
-
 import copy
 import types
+
 
 class AttribDict(dict):
     """

@@ -1,21 +1,32 @@
+import hmac
+import random
+import struct
 
-import types, hmac, binascii, struct, random
 from .utils.pyDes import des
 
 try:
     import hashlib
+
     hashlib.new('md4')
 
-    def MD4(): return hashlib.new('md4')
-except ( ImportError, ValueError ):
+
+    def MD4():
+        return hashlib.new('md4')
+except (ImportError, ValueError):
     from .utils.md4 import MD4
 
 try:
     import hashlib
-    def MD5(s): return hashlib.md5(s)
+
+
+    def MD5(s):
+        return hashlib.md5(s)
 except ImportError:
     import md5
-    def MD5(s): return md5.new(s)
+
+
+    def MD5(s):
+        return md5.new(s)
 
 ################
 # NTLMv2 Methods
@@ -23,38 +34,38 @@ except ImportError:
 
 # The following constants are defined in accordance to [MS-NLMP]: 2.2.2.5
 
-NTLM_NegotiateUnicode                =  0x00000001
-NTLM_NegotiateOEM                    =  0x00000002
-NTLM_RequestTarget                   =  0x00000004
-NTLM_Unknown9                        =  0x00000008
-NTLM_NegotiateSign                   =  0x00000010
-NTLM_NegotiateSeal                   =  0x00000020
-NTLM_NegotiateDatagram               =  0x00000040
-NTLM_NegotiateLanManagerKey          =  0x00000080
-NTLM_Unknown8                        =  0x00000100
-NTLM_NegotiateNTLM                   =  0x00000200
-NTLM_NegotiateNTOnly                 =  0x00000400
-NTLM_Anonymous                       =  0x00000800
-NTLM_NegotiateOemDomainSupplied      =  0x00001000
-NTLM_NegotiateOemWorkstationSupplied =  0x00002000
-NTLM_Unknown6                        =  0x00004000
-NTLM_NegotiateAlwaysSign             =  0x00008000
-NTLM_TargetTypeDomain                =  0x00010000
-NTLM_TargetTypeServer                =  0x00020000
-NTLM_TargetTypeShare                 =  0x00040000
-NTLM_NegotiateExtendedSecurity       =  0x00080000
-NTLM_NegotiateIdentify               =  0x00100000
-NTLM_Unknown5                        =  0x00200000
-NTLM_RequestNonNTSessionKey          =  0x00400000
-NTLM_NegotiateTargetInfo             =  0x00800000
-NTLM_Unknown4                        =  0x01000000
-NTLM_NegotiateVersion                =  0x02000000
-NTLM_Unknown3                        =  0x04000000
-NTLM_Unknown2                        =  0x08000000
-NTLM_Unknown1                        =  0x10000000
-NTLM_Negotiate128                    =  0x20000000
-NTLM_NegotiateKeyExchange            =  0x40000000
-NTLM_Negotiate56                     =  0x80000000
+NTLM_NegotiateUnicode = 0x00000001
+NTLM_NegotiateOEM = 0x00000002
+NTLM_RequestTarget = 0x00000004
+NTLM_Unknown9 = 0x00000008
+NTLM_NegotiateSign = 0x00000010
+NTLM_NegotiateSeal = 0x00000020
+NTLM_NegotiateDatagram = 0x00000040
+NTLM_NegotiateLanManagerKey = 0x00000080
+NTLM_Unknown8 = 0x00000100
+NTLM_NegotiateNTLM = 0x00000200
+NTLM_NegotiateNTOnly = 0x00000400
+NTLM_Anonymous = 0x00000800
+NTLM_NegotiateOemDomainSupplied = 0x00001000
+NTLM_NegotiateOemWorkstationSupplied = 0x00002000
+NTLM_Unknown6 = 0x00004000
+NTLM_NegotiateAlwaysSign = 0x00008000
+NTLM_TargetTypeDomain = 0x00010000
+NTLM_TargetTypeServer = 0x00020000
+NTLM_TargetTypeShare = 0x00040000
+NTLM_NegotiateExtendedSecurity = 0x00080000
+NTLM_NegotiateIdentify = 0x00100000
+NTLM_Unknown5 = 0x00200000
+NTLM_RequestNonNTSessionKey = 0x00400000
+NTLM_NegotiateTargetInfo = 0x00800000
+NTLM_Unknown4 = 0x01000000
+NTLM_NegotiateVersion = 0x02000000
+NTLM_Unknown3 = 0x04000000
+NTLM_Unknown2 = 0x08000000
+NTLM_Unknown1 = 0x10000000
+NTLM_Negotiate128 = 0x20000000
+NTLM_NegotiateKeyExchange = 0x40000000
+NTLM_Negotiate56 = 0x80000000
 
 NTLM_FLAGS = NTLM_NegotiateUnicode | \
              NTLM_RequestTarget | \
@@ -66,6 +77,7 @@ NTLM_FLAGS = NTLM_NegotiateUnicode | \
              NTLM_Negotiate128 | \
              NTLM_NegotiateKeyExchange | \
              NTLM_Negotiate56
+
 
 def generateNegotiateMessage():
     """
@@ -81,7 +93,8 @@ def generateNegotiateMessage():
     return s
 
 
-def generateAuthenticateMessage(challenge_flags, nt_response, lm_response, session_key, user, domain = 'WORKGROUP', workstation = 'LOCALHOST'):
+def generateAuthenticateMessage(challenge_flags, nt_response, lm_response, session_key, user, domain='WORKGROUP',
+                                workstation='LOCALHOST'):
     """
     References:
     ===========
@@ -147,26 +160,28 @@ def decodeChallengeMessage(ntlm_data):
     assert signature == b'NTLMSSP\0'
     assert message_type == 0x02
 
-    return challenge, flags, bytes(ntlm_data[targetinfo_offset:targetinfo_offset+targetinfo_len])
+    return challenge, flags, bytes(ntlm_data[targetinfo_offset:targetinfo_offset + targetinfo_len])
 
 
-def generateChallengeResponseV2(password, user, server_challenge, server_info, domain = '', client_challenge = None):
+def generateChallengeResponseV2(password, user, server_challenge, server_info, domain='', client_challenge=None):
     client_timestamp = b'\0' * 8
 
     if not client_challenge:
-        client_challenge = bytes([ random.getrandbits(8) for i in range(0, 8) ])
+        client_challenge = bytes([random.getrandbits(8) for i in range(0, 8)])
 
     assert len(client_challenge) == 8
 
     d = MD4()
     d.update(password.encode('UTF-16LE'))
-    ntlm_hash = d.digest()   # The NT password hash
-    response_key = hmac.new(ntlm_hash, (user.upper() + domain).encode('UTF-16LE'), 'md5').digest()  # The NTLMv2 password hash. In [MS-NLMP], this is the result of NTOWFv2 and LMOWFv2 functions
-    temp = b'\x01\x01' + b'\0'*6 + client_timestamp + client_challenge + b'\0'*4 + server_info
+    ntlm_hash = d.digest()  # The NT password hash
+    response_key = hmac.new(ntlm_hash, (user.upper() + domain).encode('UTF-16LE'),
+                            'md5').digest()  # The NTLMv2 password hash. In [MS-NLMP], this is the result of NTOWFv2 and LMOWFv2 functions
+    temp = b'\x01\x01' + b'\0' * 6 + client_timestamp + client_challenge + b'\0' * 4 + server_info
     ntproofstr = hmac.new(response_key, server_challenge + temp, 'md5').digest()
 
     nt_challenge_response = ntproofstr + temp
-    lm_challenge_response = hmac.new(response_key, server_challenge + client_challenge, 'md5').digest() + client_challenge
+    lm_challenge_response = hmac.new(response_key, server_challenge + client_challenge,
+                                     'md5').digest() + client_challenge
     session_key = hmac.new(response_key, ntproofstr, 'md5').digest()
 
     return nt_challenge_response, lm_challenge_response, session_key
@@ -178,15 +193,15 @@ def generateChallengeResponseV2(password, user, server_challenge, server_info, d
 
 def expandDesKey(key):
     """Expand the key from a 7-byte password key into a 8-byte DES key"""
-    s = [ ((key[0] >> 1) & 0x7f) << 1,
-          ((key[0] & 0x01) << 6 | ((key[1] >> 2) & 0x3f)) << 1,
-          ((key[1] & 0x03) << 5 | ((key[2] >> 3) & 0x1f)) << 1,
-          ((key[2] & 0x07) << 4 | ((key[3] >> 4) & 0x0f)) << 1,
-          ((key[3] & 0x0f) << 3 | ((key[4] >> 5) & 0x07)) << 1,
-          ((key[4] & 0x1f) << 2 | ((key[5] >> 6) & 0x03)) << 1,
-          ((key[5] & 0x3f) << 1 | ((key[6] >> 7) & 0x01)) << 1,
-          (key[6] & 0x7f) << 1
-        ]
+    s = [((key[0] >> 1) & 0x7f) << 1,
+         ((key[0] & 0x01) << 6 | ((key[1] >> 2) & 0x3f)) << 1,
+         ((key[1] & 0x03) << 5 | ((key[2] >> 3) & 0x1f)) << 1,
+         ((key[2] & 0x07) << 4 | ((key[3] >> 4) & 0x0f)) << 1,
+         ((key[3] & 0x0f) << 3 | ((key[4] >> 5) & 0x07)) << 1,
+         ((key[4] & 0x1f) << 2 | ((key[5] >> 6) & 0x03)) << 1,
+         ((key[5] & 0x3f) << 1 | ((key[6] >> 7) & 0x01)) << 1,
+         (key[6] & 0x7f) << 1
+         ]
     return bytes(s)
 
 
@@ -203,7 +218,7 @@ def DESL(K, D):
     return d1.encrypt(D) + d2.encrypt(D) + d3.encrypt(D)
 
 
-def generateChallengeResponseV1(password, server_challenge, has_extended_security = False, client_challenge = None):
+def generateChallengeResponseV1(password, server_challenge, has_extended_security=False, client_challenge=None):
     """
     Generate a NTLMv1 response
 
@@ -221,23 +236,24 @@ def generateChallengeResponseV1(password, server_challenge, has_extended_securit
     _password = bytes((password.upper() + '\0' * 14)[:14], 'ascii')
     d1 = des(expandDesKey(_password[:7]))
     d2 = des(expandDesKey(_password[7:]))
-    lm_response_key = d1.encrypt(b"KGS!@#$%") + d2.encrypt(b"KGS!@#$%")  # LM password hash. In [MS-NLMP], this is the result of LMOWFv1 function
+    lm_response_key = d1.encrypt(b"KGS!@#$%") + d2.encrypt(
+        b"KGS!@#$%")  # LM password hash. In [MS-NLMP], this is the result of LMOWFv1 function
 
     d = MD4()
     d.update(password.encode('UTF-16LE'))
-    nt_response_key = d.digest()   # In [MS-NLMP], this is the result of NTOWFv1 function
+    nt_response_key = d.digest()  # In [MS-NLMP], this is the result of NTOWFv1 function
 
     if has_extended_security:
         if not client_challenge:
-            client_challenge = bytes([ random.getrandbits(8) for i in range(0, 8) ])
+            client_challenge = bytes([random.getrandbits(8) for i in range(0, 8)])
 
         assert len(client_challenge) == 8
 
-        lm_challenge_response = client_challenge + b'\0'*16
+        lm_challenge_response = client_challenge + b'\0' * 16
         nt_challenge_response = DESL(nt_response_key, MD5(server_challenge + client_challenge).digest()[0:8])
     else:
-        nt_challenge_response = DESL(nt_response_key, server_challenge)   # The result after DESL is the NT response
-        lm_challenge_response = DESL(lm_response_key, server_challenge)   # The result after DESL is the LM response
+        nt_challenge_response = DESL(nt_response_key, server_challenge)  # The result after DESL is the NT response
+        lm_challenge_response = DESL(lm_response_key, server_challenge)  # The result after DESL is the LM response
 
     d = MD4()
     d.update(nt_response_key)

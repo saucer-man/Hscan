@@ -1,14 +1,15 @@
+import importlib
+import logging
+import os
+import queue
+import sys
+import time
+import traceback
+
 from libs.core.common import url2ip
 from libs.core.data import cmdLineOptions, logger, paths, conf
-from libs.utils.config import ConfigFileParser
-import os
-import sys
 from libs.core.exception import TargetException1, PocTaskException
-import queue
-import importlib
-import traceback
-import logging
-import time
+from libs.utils.config import ConfigFileParser
 
 
 def loader():
@@ -18,11 +19,13 @@ def loader():
     port_loader()
     engine_loader()
 
+
 def general():
     if cmdLineOptions.verbose or ConfigFileParser().verbose().strip() == "True":
         logger.logger.setLevel(logging.DEBUG)
     filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + '.txt'
     conf.output_path = os.path.join(paths.RESULT_PATH, filename)
+
 
 def engine_loader():
     conf.timeout = cmdLineOptions.timeout
@@ -64,6 +67,7 @@ def engine_loader():
     except:
         conf.thread = 200
 
+
 def port_loader():
     conf.port = set()
     # first load port from args
@@ -71,7 +75,7 @@ def port_loader():
         ports = cmdLineOptions.port.split(",")
         for port in ports:
             if "-" in port:
-                for i in range(int(port.split("-")[0]), int(port.split("-")[-1])+1):
+                for i in range(int(port.split("-")[0]), int(port.split("-")[-1]) + 1):
                     conf.port.add(i)
             else:
                 conf.port.add(int(port))

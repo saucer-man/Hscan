@@ -1,17 +1,13 @@
-
-import os, logging, time
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import ClientFactory, Protocol
-from .smb_constants import *
-from .smb_structs import *
+
 from .base import SMB, NotConnectedError, NotReadyError, SMBTimeout
+from .smb_structs import *
 
-
-__all__ = [ 'SMBProtocolFactory', 'NotConnectedError', 'NotReadyError' ]
+__all__ = ['SMBProtocolFactory', 'NotConnectedError', 'NotReadyError']
 
 
 class SMBProtocol(Protocol, SMB):
-
     log = logging.getLogger('SMB.SMBProtocol')
 
     #
@@ -24,7 +20,6 @@ class SMBProtocol(Protocol, SMB):
             self.requestNMBSession()
         else:
             self.onNMBSessionOK()
-
 
     def connectionLost(self, reason):
         if self.factory.instance == self:
@@ -64,7 +59,8 @@ class SMBProtocol(Protocol, SMB):
                 if r.expiry_time < now:
                     try:
                         r.errback(SMBTimeout())
-                    except Exception: pass
+                    except Exception:
+                        pass
                     to_remove.append(mid)
 
             for mid in to_remove:
@@ -74,7 +70,6 @@ class SMBProtocol(Protocol, SMB):
 
 
 class SMBProtocolFactory(ClientFactory):
-
     protocol = SMBProtocol
     log = logging.getLogger('SMB.SMBFactory')
 
@@ -85,7 +80,8 @@ class SMBProtocolFactory(ClientFactory):
     #: SMB messages will only be signed when remote server requires signing.
     SIGN_WHEN_REQUIRED = 2
 
-    def __init__(self, username, password, my_name, remote_name, domain = '', use_ntlm_v2 = True, sign_options = SIGN_WHEN_REQUIRED, is_direct_tcp = False):
+    def __init__(self, username, password, my_name, remote_name, domain='', use_ntlm_v2=True,
+                 sign_options=SIGN_WHEN_REQUIRED, is_direct_tcp=False):
         """
         Create a new SMBProtocolFactory instance. You will pass this instance to *reactor.connectTCP()* which will then instantiate the TCP connection to the remote SMB/CIFS server.
         Note that the default TCP port for most SMB/CIFS servers using NetBIOS over TCP/IP is 139.
@@ -119,7 +115,7 @@ class SMBProtocolFactory(ClientFactory):
         self.use_ntlm_v2 = use_ntlm_v2
         self.sign_options = sign_options
         self.is_direct_tcp = is_direct_tcp
-        self.instance = None    #: The single SMBProtocol instance for each SMBProtocolFactory instance. Usually, you should not need to touch this attribute directly.
+        self.instance = None  #: The single SMBProtocol instance for each SMBProtocolFactory instance. Usually, you should not need to touch this attribute directly.
 
     #
     # Public Property
@@ -163,7 +159,7 @@ class SMBProtocolFactory(ClientFactory):
     # Public Methods
     #
 
-    def listShares(self, timeout = 30):
+    def listShares(self, timeout=30):
         """
         Retrieve a list of shared resources on remote server.
 
@@ -178,8 +174,8 @@ class SMBProtocolFactory(ClientFactory):
         return d
 
     def listPath(self, service_name, path,
-                 search = SMB_FILE_ATTRIBUTE_READONLY | SMB_FILE_ATTRIBUTE_HIDDEN | SMB_FILE_ATTRIBUTE_SYSTEM | SMB_FILE_ATTRIBUTE_DIRECTORY | SMB_FILE_ATTRIBUTE_ARCHIVE | SMB_FILE_ATTRIBUTE_INCL_NORMAL,
-                 pattern = '*', timeout = 30):
+                 search=SMB_FILE_ATTRIBUTE_READONLY | SMB_FILE_ATTRIBUTE_HIDDEN | SMB_FILE_ATTRIBUTE_SYSTEM | SMB_FILE_ATTRIBUTE_DIRECTORY | SMB_FILE_ATTRIBUTE_ARCHIVE | SMB_FILE_ATTRIBUTE_INCL_NORMAL,
+                 pattern='*', timeout=30):
         """
         Retrieve a directory listing of files/folders at *path*
 
@@ -203,10 +199,11 @@ class SMBProtocolFactory(ClientFactory):
             raise NotConnectedError('Not connected to server')
 
         d = defer.Deferred()
-        self.instance._listPath(service_name, path, d.callback, d.errback, search = search, pattern = pattern, timeout = timeout)
+        self.instance._listPath(service_name, path, d.callback, d.errback, search=search, pattern=pattern,
+                                timeout=timeout)
         return d
 
-    def listSnapshots(self, service_name, path, timeout = 30):
+    def listSnapshots(self, service_name, path, timeout=30):
         """
         Retrieve a list of available snapshots (a.k.a. shadow copies) for *path*.
 
@@ -221,10 +218,10 @@ class SMBProtocolFactory(ClientFactory):
             raise NotConnectedError('Not connected to server')
 
         d = defer.Deferred()
-        self.instance._listSnapshots(service_name, path, d.callback, d.errback, timeout = timeout)
+        self.instance._listSnapshots(service_name, path, d.callback, d.errback, timeout=timeout)
         return d
 
-    def getAttributes(self, service_name, path, timeout = 30):
+    def getAttributes(self, service_name, path, timeout=30):
         """
         Retrieve information about the file at *path* on the *service_name*.
 
@@ -236,10 +233,10 @@ class SMBProtocolFactory(ClientFactory):
             raise NotConnectedError('Not connected to server')
 
         d = defer.Deferred()
-        self.instance._getAttributes(service_name, path, d.callback, d.errback, timeout = timeout)
+        self.instance._getAttributes(service_name, path, d.callback, d.errback, timeout=timeout)
         return d
 
-    def retrieveFile(self, service_name, path, file_obj, timeout = 30):
+    def retrieveFile(self, service_name, path, file_obj, timeout=30):
         """
         Retrieve the contents of the file at *path* on the *service_name* and write these contents to the provided *file_obj*.
 
@@ -257,7 +254,7 @@ class SMBProtocolFactory(ClientFactory):
         """
         return self.retrieveFileFromOffset(service_name, path, file_obj, 0, -1, timeout)
 
-    def retrieveFileFromOffset(self, service_name, path, file_obj, offset = 0, max_length = -1, timeout = 30):
+    def retrieveFileFromOffset(self, service_name, path, file_obj, offset=0, max_length=-1, timeout=30):
         """
         Retrieve the contents of the file at *path* on the *service_name* and write these contents to the provided *file_obj*.
 
@@ -278,10 +275,11 @@ class SMBProtocolFactory(ClientFactory):
             raise NotConnectedError('Not connected to server')
 
         d = defer.Deferred()
-        self.instance._retrieveFileFromOffset(service_name, path, file_obj, d.callback, d.errback, offset, max_length, timeout = timeout)
+        self.instance._retrieveFileFromOffset(service_name, path, file_obj, d.callback, d.errback, offset, max_length,
+                                              timeout=timeout)
         return d
 
-    def storeFile(self, service_name, path, file_obj, timeout = 30):
+    def storeFile(self, service_name, path, file_obj, timeout=30):
         """
         Store the contents of the *file_obj* at *path* on the *service_name*.
 
@@ -300,10 +298,10 @@ class SMBProtocolFactory(ClientFactory):
             raise NotConnectedError('Not connected to server')
 
         d = defer.Deferred()
-        self.instance._storeFile(service_name, path, file_obj, d.callback, d.errback, timeout = timeout)
+        self.instance._storeFile(service_name, path, file_obj, d.callback, d.errback, timeout=timeout)
         return d
 
-    def deleteFiles(self, service_name, path_file_pattern, timeout = 30):
+    def deleteFiles(self, service_name, path_file_pattern, timeout=30):
         """
         Delete one or more regular files. It supports the use of wildcards in file names, allowing for deletion of multiple files in a single request.
 
@@ -318,7 +316,7 @@ class SMBProtocolFactory(ClientFactory):
             raise NotConnectedError('Not connected to server')
 
         d = defer.Deferred()
-        self.instance._deleteFiles(service_name, path_file_pattern, d.callback, d.errback, timeout = timeout)
+        self.instance._deleteFiles(service_name, path_file_pattern, d.callback, d.errback, timeout=timeout)
         return d
 
     def createDirectory(self, service_name, path):
@@ -373,7 +371,7 @@ class SMBProtocolFactory(ClientFactory):
         self.instance._rename(service_name, old_path, new_path, d.callback, d.errback)
         return d
 
-    def echo(self, data, timeout = 10):
+    def echo(self, data, timeout=10):
         """
         Send an echo command containing *data* to the remote SMB/CIFS server. The remote SMB/CIFS will reply with the same *data*.
 
@@ -405,6 +403,7 @@ class SMBProtocolFactory(ClientFactory):
     #
 
     def buildProtocol(self, addr):
-        p = self.protocol(self.username, self.password, self.my_name, self.remote_name, self.domain, self.use_ntlm_v2, self.sign_options, self.is_direct_tcp)
+        p = self.protocol(self.username, self.password, self.my_name, self.remote_name, self.domain, self.use_ntlm_v2,
+                          self.sign_options, self.is_direct_tcp)
         p.factory = self
         return p

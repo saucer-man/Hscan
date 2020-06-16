@@ -1,13 +1,17 @@
+import logging
+import random
+import select
+import socket
+import time
 
-import os, logging, random, socket, time, select
 from .base import NBNS, NotConnectedError
-from .nmb_constants import TYPE_CLIENT, TYPE_SERVER, TYPE_WORKSTATION
+from .nmb_constants import TYPE_SERVER
+
 
 class NetBIOS(NBNS):
-
     log = logging.getLogger('NMB.NetBIOS')
 
-    def __init__(self, broadcast = True, listen_port = 0):
+    def __init__(self, broadcast=True, listen_port=0):
         """
         Instantiate a NetBIOS instance, and creates a IPv4 UDP socket to listen/send NBNS packets.
 
@@ -19,7 +23,7 @@ class NetBIOS(NBNS):
         if self.broadcast:
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if listen_port:
-            self.sock.bind(( '', listen_port ))
+            self.sock.bind(('', listen_port))
 
     def close(self):
         """
@@ -34,9 +38,9 @@ class NetBIOS(NBNS):
 
     def write(self, data, ip, port):
         assert self.sock, 'Socket is already closed'
-        self.sock.sendto(data, ( ip, port ))
+        self.sock.sendto(data, (ip, port))
 
-    def queryName(self, name, ip = '', port = 137, timeout = 30):
+    def queryName(self, name, ip='', port=137, timeout=30):
         """
         Send a query on the network and hopes that if machine matching the *name* will reply with its IP address.
 
@@ -59,7 +63,7 @@ class NetBIOS(NBNS):
 
         return self._pollForNetBIOSPacket(trn_id, timeout)
 
-    def queryIPForName(self, ip, port = 137, timeout = 30):
+    def queryIPForName(self, ip, port=137, timeout=30):
         """
         Send a query to the machine with *ip* and hopes that the machine will reply back with its name.
 
@@ -90,11 +94,11 @@ class NetBIOS(NBNS):
         end_time = time.time() - timeout
         while True:
             try:
-                _timeout = time.time()-end_time
+                _timeout = time.time() - end_time
                 if _timeout <= 0:
                     return None
 
-                ready, _, _ = select.select([ self.sock.fileno() ], [ ], [ ], _timeout)
+                ready, _, _ = select.select([self.sock.fileno()], [], [], _timeout)
                 if not ready:
                     return None
 
@@ -120,11 +124,11 @@ class NetBIOS(NBNS):
         end_time = time.time() - timeout
         while True:
             try:
-                _timeout = time.time()-end_time
+                _timeout = time.time() - end_time
                 if _timeout <= 0:
                     return None
 
-                ready, _, _ = select.select([ self.sock.fileno() ], [ ], [ ], _timeout)
+                ready, _, _ = select.select([self.sock.fileno()], [], [], _timeout)
                 if not ready:
                     return None
 

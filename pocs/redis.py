@@ -1,5 +1,4 @@
 import socket
-import traceback
 
 
 def poc(host, port, timeout):

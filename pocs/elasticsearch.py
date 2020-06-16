@@ -1,14 +1,15 @@
 import requests
 
+
 def poc(host, port, timeout):
     try:
         r = requests.get(f"http://{host}:{port}", timeout=timeout, allow_redirects=False, verify=False)
         if "You Know, for Search" in r.text:
-            if(elasticsearch_cve_2014_3120_rce_check(host, port, timeout)):
+            if (elasticsearch_cve_2014_3120_rce_check(host, port, timeout)):
                 return "elasticsearch cve-2014-3120"
-            if(elasticsearch_cve_2015_1427_rce_check(host, port, timeout)):
+            if (elasticsearch_cve_2015_1427_rce_check(host, port, timeout)):
                 return "elasticsearch cve-2015-1427"
-            if(elasticsearch_cve_2015_3337_rce_check(host, port, timeout)):
+            if (elasticsearch_cve_2015_3337_rce_check(host, port, timeout)):
                 return "elasticsearch cve-2015-3337"
             else:
                 return "elasticsearch is unauthorized"
@@ -59,6 +60,7 @@ def elasticsearch_cve_2015_1427_rce_check(host, port, timeout):
     except:
         pass
     return False
+
 
 def elasticsearch_cve_2015_3337_rce_check(host, port, timeout):
     try:
