@@ -59,13 +59,10 @@ def engine_loader():
     try:
         if isinstance(cmdLineOptions.thread, int):
             conf.thread = cmdLineOptions.thread
-
-        elif isinstance(ConfigFileParser().thread(), int):
-            conf.thread = ConfigFileParser().thread()
         else:
-            conf.thread = 200
+            conf.thread = int(ConfigFileParser().thread())
     except:
-        conf.thread = 200
+        conf.thread = 100
 
 
 def port_loader():

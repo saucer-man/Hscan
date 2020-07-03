@@ -9,8 +9,8 @@ from libs.core.data import logger, conf
 
 
 def poc_scan():
-    while conf.poctask_queue.qsize() > 0:
-        task = conf.poctask_queue.get()
+    while not conf.poctask_queue.empty():
+        task = conf.poctask_queue.get(timeout=1)
         res = task["poc"].poc(task['host'], task['port'], conf.timeout)
         result_handler(task, res)
         sys.stdout.write("(" + str(conf.poctask_num - conf.poctask_queue.qsize()) + "/" + str(conf.poctask_num) + ")\r")

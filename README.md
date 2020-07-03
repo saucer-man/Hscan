@@ -4,10 +4,10 @@
 
 目前已集成如下poc
 ```
-'postgresql', 'ftp', 'mongo', 'redis', 'elasticsearch', 
-'couchdb', 'docker', 'grafana', 'jupyter', 'jboss', 'druid', 
-'hadoop', 'genkins', 'mencache', 'zookeeper', 'mysql', 
-'apache', 'samba', 'rsync', 'mssql', 'NXRM'
+'apache', 'jboss', 'docker', 'druid', 'NXRM', 'mongo',
+'ftp', 'samba', 'redis', 'rsync', 'zookeeper', 'couchdb',
+'hadoop', 'spring_actuator', 'jupyter', 'grafana', 'mysql',
+'mssql', 'postgresql', 'mencache', 'elasticsearch', 'genkins'
 ```
 
 参数说明
