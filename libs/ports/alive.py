@@ -56,6 +56,7 @@ def alive_detect():
         logger.info("skip host alive detection because you use -Pn")
     if len(conf.target) < 1:
         raise TargetException2
+    logger.info(f"total number of alive host targets : {len(conf.target)}")
     with open(conf.output_path, "a", encoding='utf-8') as f:
         f.write("1. alive host\n")
         for t in conf.target:

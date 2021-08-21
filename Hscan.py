@@ -12,6 +12,10 @@ import os
 from libs.core.exception import PyVersionException, TargetException1, TargetException2, PocTaskException
 from libs.controller.loader import loader, load_poctasks
 
+import urllib3
+import requests
+requests.packages.urllib3.disable_warnings() 
+urllib3.disable_warnings()
 
 def main():
     try:
